@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Download, FileArchive, ImageIcon, PencilLine, RefreshCw } from "lucide-react";
+import { Download, FileArchive, ImageIcon, PencilLine, RefreshCw, Sparkles } from "lucide-react";
 import type { AssetRecord, GenerationRecord } from "@/types/project";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -32,24 +32,37 @@ export function AssetsManager({
   const [headline, setHeadline] = useState("");
   const [subheadline, setSubheadline] = useState("");
   const [templateFamily, setTemplateFamily] = useState("minimal");
+  const [actionError, setActionError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   async function save(assetId: string) {
-    await fetch(`/api/assets/${assetId}`, {
+    setActionError(null);
+    const res = await fetch(`/api/assets/${assetId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ headline, subheadline, templateFamily })
     });
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      setActionError(json.error || "Could not save this asset.");
+      return;
+    }
     setEditing(null);
     window.location.reload();
   }
 
   async function rerenderAsset(assetId: string) {
-    await fetch(`/api/assets/${assetId}`, {
+    setActionError(null);
+    const res = await fetch(`/api/assets/${assetId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ templateFamily })
     });
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      setActionError(json.error || "Could not rerender this asset.");
+      return;
+    }
     window.location.reload();
   }
 
@@ -143,6 +156,7 @@ export function AssetsManager({
             Download the final asset directly, or edit the text layer and rerender when a headline needs more polish.
           </p>
         </div>
+        {actionError ? <p className="rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-400">{actionError}</p> : null}
 
         <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
           {assets.map((asset) => (
@@ -161,6 +175,10 @@ export function AssetsManager({
                 <div>
                   <h3 className="text-base font-semibold text-slate-950 dark:text-white">{assetLabel(asset.asset_type)}</h3>
                   <p className="mt-1 text-sm text-muted-foreground">Template: {(asset.metadata_json as { template_family?: string } | null)?.template_family || "minimal"}</p>
+                  <p className="mt-2 inline-flex items-center gap-2 rounded-full border border-border/70 px-3 py-1 text-xs text-muted-foreground">
+                    <Sparkles className="size-3.5" />
+                    {(asset.metadata_json as { render_source?: string } | null)?.render_source === "mistral_image_generation" ? "Mistral image generated" : "Template fallback"}
+                  </p>
                 </div>
 
                 <div className="grid gap-2 sm:grid-cols-3">

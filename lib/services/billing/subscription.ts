@@ -71,23 +71,41 @@ export async function consumeGenerationCredit(userId: string) {
   return data;
 }
 
-export async function grantCreditPack(userId: string, packId: CreditPackId, providerRef: string) {
+export async function refundGenerationCredit(userId: string, reason: string, generationId?: string) {
   const supabase = await createSupabaseServerClient();
   const current = await getOrCreateSubscription(userId);
+
+  const { data, error } = await supabase
+    .from("subscriptions")
+    .update({ credits_remaining: current.credits_remaining + 1 })
+    .eq("id", current.id)
+    .select("*")
+    .single();
+
+  if (error || !data) throw new Error(error?.message || "Could not refund generation credit.");
+
+  await supabase.from("usage_events").insert({
+    user_id: userId,
+    project_id: null,
+    event_type: "generation_credit_refunded",
+    metadata_json: { reason, generationId }
+  });
+
+  return data;
+}
+
+export async function grantCreditPack(userId: string, packId: CreditPackId, providerRef: string) {
+  const supabase = await createSupabaseServerClient();
+  await getOrCreateSubscription(userId);
   const pack = PLAN_CONFIG[packId];
 
-  const credits = current.credits_remaining + pack.creditsGranted;
-  const { error } = await supabase
-    .from("subscriptions")
-    .update({
-      plan: "credits",
-      status: "active",
-      credits_remaining: credits,
-      provider: "lemon_squeezy",
-      provider_reference: providerRef,
-      last_payment_at: new Date().toISOString()
-    })
-    .eq("id", current.id);
+  const { error } = await supabase.rpc("grant_credit_pack_atomic", {
+    p_user_id: userId,
+    p_source: "lemon_squeezy",
+    p_provider_reference: providerRef,
+    p_credits: pack.creditsGranted,
+    p_metadata: { packId }
+  });
 
   if (error) throw new Error(error.message);
 }
