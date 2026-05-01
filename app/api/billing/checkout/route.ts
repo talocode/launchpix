@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/supabase/auth";
-import { createCreditCheckout } from "@/lib/payments/lemon-squeezy";
+import { createCreditCheckout, validateCreditCheckoutConfig } from "@/lib/payments/lemon-squeezy";
 import { trackEvent } from "@/lib/services/analytics/events";
 import { isCreditPackId } from "@/lib/services/billing/plans";
+import { buildAppUrl } from "@/lib/app-url";
 
 export async function POST(req: Request) {
   try {
@@ -14,13 +15,15 @@ export async function POST(req: Request) {
     const email = user.email;
     if (!email) return NextResponse.json({ error: "No verified email found for checkout." }, { status: 400 });
 
+    await validateCreditCheckoutConfig(packId);
+
     await trackEvent({ userId: user.id, eventType: "checkout_started", metadata: { pack: packId, provider: "lemon_squeezy" } });
 
     const data = await createCreditCheckout({
       email,
       packId,
       userId: user.id,
-      callbackUrl: `${process.env.NEXT_PUBLIC_APP_URL}/settings/billing?checkout=success`
+      callbackUrl: buildAppUrl("/settings/billing?checkout=success", req)
     });
 
     return NextResponse.json({ checkout_url: data.checkoutUrl, authorization_url: data.checkoutUrl });
@@ -37,7 +40,7 @@ export async function POST(req: Request) {
       );
     }
 
-    if (message.includes("is not configured")) {
+    if (message.includes("is not configured") || message.includes("must be a numeric") || message.includes("belongs to Lemon Squeezy store")) {
       return NextResponse.json({ error: message }, { status: 500 });
     }
 

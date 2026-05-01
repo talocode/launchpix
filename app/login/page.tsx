@@ -13,6 +13,8 @@ export const metadata: Metadata = {
   description: "Sign in to LaunchPix with Google and start generating polished launch visuals from raw screenshots."
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function LoginPage() {
   const session = await auth();
   if (session?.user?.email) redirect("/dashboard/projects");

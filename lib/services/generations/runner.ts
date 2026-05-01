@@ -6,16 +6,52 @@ import { createDeterministicGenerationPlan } from "@/lib/ai/mistral";
 import { generationPlanSchema } from "@/lib/ai/schemas/asset-plan";
 import { buildDeterministicAssets, renderAssetPng } from "@/lib/render/pipeline";
 import type { ProjectRecord, UploadRecord } from "@/types/project";
-import { consumeGenerationCredit, getOrCreateSubscription } from "@/lib/services/billing/subscription";
+import { consumeGenerationCredit, getOrCreateSubscription, refundGenerationCredit } from "@/lib/services/billing/subscription";
 import { PLAN_CONFIG } from "@/lib/services/billing/plans";
 import { trackEvent } from "@/lib/services/analytics/events";
 
 const ASSET_BUCKET = process.env.STORAGE_BUCKET_ASSETS || "launchpix-assets";
+const MISTRAL_ASSET_TIMEOUT_MS = 45_000;
+const MISTRAL_RENDER_ATTEMPTS = 2;
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, label: string) {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label} timed out after ${Math.round(timeoutMs / 1000)}s`)), timeoutMs);
+  });
+
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+async function generateMistralAssetWithRetry(input: Parameters<typeof generateMistralAssetPng>[0]) {
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= MISTRAL_RENDER_ATTEMPTS; attempt += 1) {
+    try {
+      return await withTimeout(generateMistralAssetPng(input), MISTRAL_ASSET_TIMEOUT_MS, "Mistral image generation");
+    } catch (error) {
+      lastError = error;
+      if (attempt < MISTRAL_RENDER_ATTEMPTS) await sleep(850 * attempt);
+    }
+  }
+
+  throw lastError instanceof Error ? lastError : new Error("Mistral image generation failed.");
+}
 
 export async function runGenerationForProject(project: ProjectRecord, uploads: UploadRecord[]) {
   const supabase = await createSupabaseServerClient();
   const subscription = await consumeGenerationCredit(project.user_id);
   const plan = PLAN_CONFIG[(subscription.plan as keyof typeof PLAN_CONFIG) || "credits"] || PLAN_CONFIG.credits;
+  const generationStartedAt = Date.now();
+  let creditRefunded = false;
 
   const { data: generation, error: generationError } = await supabase
     .from("generations")
@@ -59,13 +95,15 @@ export async function runGenerationForProject(project: ProjectRecord, uploads: U
 
     const deterministicAssets = buildDeterministicAssets(safePlan, uploads);
     const zip = new JSZip();
+    const renderSources: Record<string, number> = {};
 
     for (const [index, asset] of deterministicAssets.entries()) {
       let renderSource: "mistral_image_generation" | "deterministic_template" = "mistral_image_generation";
       let fullPng: Buffer | Uint8Array;
+      const assetStartedAt = Date.now();
 
       try {
-        fullPng = await generateMistralAssetPng({
+        fullPng = await generateMistralAssetWithRetry({
           plan: safePlan,
           asset,
           project: {
@@ -92,6 +130,7 @@ export async function runGenerationForProject(project: ProjectRecord, uploads: U
           primaryColor: project.primary_color
         });
       }
+      renderSources[renderSource] = (renderSources[renderSource] || 0) + 1;
 
       const previewPng = fullPng;
 
@@ -120,6 +159,7 @@ export async function runGenerationForProject(project: ProjectRecord, uploads: U
           notes: asset.notes,
           callouts: asset.callouts,
           screenshot_ids: asset.screenshot_ids,
+          render_duration_ms: Date.now() - assetStartedAt,
           watermark_required: plan.watermarkPreview
         }
       });
@@ -132,16 +172,38 @@ export async function runGenerationForProject(project: ProjectRecord, uploads: U
     await supabase.storage.from(ASSET_BUCKET).upload(zipPath, zipBuffer, { contentType: "application/zip", upsert: true });
     const { data: zipUrl } = supabase.storage.from(ASSET_BUCKET).getPublicUrl(zipPath);
 
-    await supabase.from("generations").update({ status: "completed", style_json: { ...safePlan, zip_url: zipUrl.publicUrl } }).eq("id", generation.id);
+    await supabase.from("generations").update({ status: "completed", style_json: { ...safePlan, zip_url: zipUrl.publicUrl, render_sources: renderSources } }).eq("id", generation.id);
     await supabase.from("projects").update({ status: "completed" }).eq("id", project.id);
-    await trackEvent({ userId: project.user_id, projectId: project.id, eventType: "generation_completed", metadata: { generationId: generation.id, projectName: project.name } });
+    await trackEvent({
+      userId: project.user_id,
+      projectId: project.id,
+      eventType: "generation_completed",
+      metadata: {
+        generationId: generation.id,
+        projectName: project.name,
+        duration_ms: Date.now() - generationStartedAt,
+        render_sources: renderSources,
+        assets: deterministicAssets.length
+      }
+    });
 
     return { generationId: generation.id };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Generation failed";
+    try {
+      await refundGenerationCredit(project.user_id, message, generation.id);
+      creditRefunded = true;
+    } catch (refundError) {
+      console.error("Failed to refund generation credit:", refundError instanceof Error ? refundError.message : refundError);
+    }
     await supabase.from("generations").update({ status: "failed", error_message: message }).eq("id", generation.id);
     await supabase.from("projects").update({ status: "failed" }).eq("id", project.id);
-    await trackEvent({ userId: project.user_id, projectId: project.id, eventType: "generation_failed", metadata: { generationId: generation.id, projectName: project.name, message } });
+    await trackEvent({
+      userId: project.user_id,
+      projectId: project.id,
+      eventType: "generation_failed",
+      metadata: { generationId: generation.id, projectName: project.name, message, credit_refunded: creditRefunded, duration_ms: Date.now() - generationStartedAt }
+    });
     throw error;
   }
 }

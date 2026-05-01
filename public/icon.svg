@@ -1,16 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <defs>
-    <linearGradient id="launchpix-a" x1="13" y1="8" x2="54" y2="56" gradientUnits="userSpaceOnUse">
+    <linearGradient id="launchpix-a" x1="14" y1="10" x2="48" y2="52" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#111827" />
+      <stop offset="1" stop-color="#020617" />
+    </linearGradient>
+    <linearGradient id="launchpix-b" x1="20" y1="45" x2="50" y2="14" gradientUnits="userSpaceOnUse">
       <stop stop-color="#22D3EE" />
-      <stop offset="1" stop-color="#7C3AED" />
+      <stop offset="1" stop-color="#6366F1" />
     </linearGradient>
-    <linearGradient id="launchpix-b" x1="16" y1="50" x2="50" y2="14" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#E0F2FE" />
-      <stop offset="1" stop-color="#93C5FD" />
-    </linearGradient>
+    <filter id="launchpix-shadow" x="7" y="7" width="50" height="50" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="9" stdDeviation="5" flood-color="#020617" flood-opacity=".28" />
+    </filter>
   </defs>
-  <rect width="64" height="64" rx="18" fill="#02040A" />
-  <path d="M14 13.5C14 10.46 16.46 8 19.5 8h8.5v34h21v8.5c0 3.04-2.46 5.5-5.5 5.5h-24C16.46 56 14 53.54 14 50.5v-37Z" fill="url(#launchpix-a)" />
-  <path d="M28 8h14c3.31 0 6 2.69 6 6v13.5L28 48V8Z" fill="url(#launchpix-b)" opacity=".94" />
-  <path d="M43.5 14.5l1.9 5.4 5.4 1.9-5.4 1.9-1.9 5.4-1.9-5.4-5.4-1.9 5.4-1.9 1.9-5.4Z" fill="#fff" />
+  <rect width="64" height="64" rx="20" fill="#F8FAFC" />
+  <rect x="7" y="7" width="50" height="50" rx="16" fill="url(#launchpix-a)" />
+  <g filter="url(#launchpix-shadow)">
+    <path d="M18.5 17.25c0-1.04.84-1.88 1.88-1.88h6.12c1.04 0 1.88.84 1.88 1.88V43h14.87c1.04 0 1.88.84 1.88 1.88v1.87c0 1.04-.84 1.88-1.88 1.88H20.38c-1.04 0-1.88-.84-1.88-1.88v-29.5Z" fill="#F8FAFC" />
+    <path d="M32.25 15.38h9.55c6.35 0 10.5 3.72 10.5 9.47 0 5.83-4.15 9.68-10.5 9.68h-4.08v12.17c0 1.04-.84 1.88-1.88 1.88h-3.59v-33.2Zm8.93 13.86c2.54 0 4.1-1.6 4.1-4.15 0-2.54-1.56-4.07-4.1-4.07h-3.46v8.22h3.46Z" fill="url(#launchpix-b)" />
+  </g>
+  <path d="M47.95 12.1l1.13 3.2 3.27 1.1-3.27 1.12-1.13 3.2-1.16-3.2-3.22-1.12 3.22-1.1 1.16-3.2Z" fill="#67E8F9" />
 </svg>

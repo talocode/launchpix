@@ -48,6 +48,27 @@ const trustSignals = [
   { value: "1", label: "ZIP handoff when approved" }
 ];
 
+const sampleOutputs = [
+  {
+    title: "App listing frame",
+    size: "1290 x 2796",
+    description: "Feature-led store artwork with a product screen, benefit headline, and supporting proof point.",
+    visual: AppListingPreview
+  },
+  {
+    title: "Promo launch tile",
+    size: "1024 x 1024",
+    description: "A square campaign asset for launch posts, newsletters, communities, and paid social tests.",
+    visual: PromoTilePreview
+  },
+  {
+    title: "Landing hero banner",
+    size: "1600 x 900",
+    description: "A wide hero visual that gives visitors a polished product impression above the fold.",
+    visual: HeroBannerPreview
+  }
+];
+
 function PhoneMockup({ className = "" }: { className?: string }) {
   return (
     <div className={`rounded-[22px] border border-white/15 bg-[#050810] p-1.5 shadow-2xl ${className}`}>
@@ -257,6 +278,29 @@ export function LandingSections() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section className="app-shell app-section text-center">
+        <div className="mx-auto max-w-2xl">
+          <p className="eyebrow">Sample pack</p>
+          <h2 className="section-title mt-5">Visitors can see the kind of visuals LaunchPix creates.</h2>
+          <p className="section-copy mt-4">
+            Each pack is structured around the same product story, then rendered into channel-ready formats instead of leaving users with disconnected screenshots.
+          </p>
+        </div>
+
+        <div className="mt-10 grid gap-5 lg:grid-cols-3">
+          {sampleOutputs.map((item) => (
+            <div key={item.title} className="rounded-[26px] border border-slate-200 bg-white p-4 text-center shadow-sm dark:border-white/[0.08] dark:bg-[#060a12]">
+              <div className="flex items-center justify-center gap-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                <span>{item.title}</span>
+                <span>{item.size}</span>
+              </div>
+              <item.visual />
+              <p className="mx-auto mt-4 max-w-sm text-sm leading-7 text-slate-600 dark:text-slate-400">{item.description}</p>
+            </div>
+          ))}
         </div>
       </section>
 

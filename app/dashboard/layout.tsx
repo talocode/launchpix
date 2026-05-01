@@ -4,6 +4,8 @@ import { DashboardTopbar } from "@/components/dashboard/topbar";
 import { getAccessContext } from "@/lib/services/access/permissions";
 import { requireUser } from "@/lib/supabase/auth";
 
+export const dynamic = "force-dynamic";
+
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
   const { user } = await requireUser();
   const { subscription, plan } = await getAccessContext(user.id);

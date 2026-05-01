@@ -2,6 +2,8 @@ import { Mistral } from "@mistralai/mistralai";
 import type { GenerationPlan } from "@/lib/ai/schemas/asset-plan";
 
 const imageModel = process.env.MISTRAL_IMAGE_MODEL || "mistral-medium-latest";
+const MIN_IMAGE_BYTES = 24_000;
+const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
 let cachedImageAgentId: string | null = null;
 
@@ -21,6 +23,18 @@ async function streamToBuffer(stream: ReadableStream<Uint8Array>) {
   }
 
   return Buffer.concat(chunks.map((chunk) => Buffer.from(chunk)));
+}
+
+function assertUsablePng(buffer: Buffer) {
+  if (buffer.length < MIN_IMAGE_BYTES) {
+    throw new Error(`Mistral image output was too small to be a usable asset (${buffer.length} bytes).`);
+  }
+
+  if (!buffer.subarray(0, PNG_SIGNATURE.length).equals(PNG_SIGNATURE)) {
+    throw new Error("Mistral image output was not a PNG file.");
+  }
+
+  return buffer;
 }
 
 async function getImageAgentId(client: Mistral) {
@@ -130,7 +144,7 @@ export async function generateMistralAssetPng(input: {
 
   try {
     const stream = await client.files.download({ fileId });
-    return streamToBuffer(stream);
+    return assertUsablePng(await streamToBuffer(stream));
   } catch (error) {
     throw new Error(`Could not download Mistral generated image: ${redactError(error)}`);
   }
