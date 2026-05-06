@@ -23,12 +23,18 @@ export function GeneratePanel({ projectId, ready, missing, credits }: { projectI
   const [generation, setGeneration] = useState<Gen>(null);
   const [pending, startTransition] = useTransition();
   const [apiError, setApiError] = useState<string | null>(null);
+  const [needsCredits, setNeedsCredits] = useState(false);
+  const [sessionExpired, setSessionExpired] = useState(false);
 
   const currentStatus = generation?.status || "idle";
   const busy = ["queued", "analyzing", "generating_copy", "rendering_assets"].includes(currentStatus);
 
   async function fetchState() {
     const res = await fetch(`/api/generations/${projectId}`);
+    if (res.status === 401) {
+      setSessionExpired(true);
+      return;
+    }
     if (!res.ok) return;
     const json = await res.json();
     setGeneration(json.generation);
@@ -48,11 +54,19 @@ export function GeneratePanel({ projectId, ready, missing, credits }: { projectI
 
   async function generate() {
     setApiError(null);
+    setNeedsCredits(false);
+    setSessionExpired(false);
     setGeneration((current) => ({ id: current?.id || "pending", status: "queued", error_message: null }));
     const res = await fetch(`/api/generations/${projectId}`, { method: "POST" });
     const json = await res.json().catch(() => ({}));
     if (!res.ok) {
-      setApiError(json.error || "Generation could not start. Please retry.");
+      const message = typeof json.error === "string" ? json.error : "Generation could not start. Please retry.";
+      setApiError(message);
+      setGeneration((current) => (current?.id ? { ...current, status: "failed", error_message: message } : null));
+      if (res.status === 401) setSessionExpired(true);
+      if (res.status === 402 || message.toLowerCase().includes("no credits remaining")) {
+        setNeedsCredits(true);
+      }
       return;
     }
     await fetchState();
@@ -136,6 +150,16 @@ export function GeneratePanel({ projectId, ready, missing, credits }: { projectI
           <p className="text-xs text-slate-500 sm:ml-1">
             {blockedByCredits ? "Generation is disabled until credits are available." : "Generation is disabled until the missing setup is complete."}
           </p>
+        ) : null}
+        {needsCredits ? (
+          <Button asChild variant="outline">
+            <Link href="/settings/billing">Buy credits</Link>
+          </Button>
+        ) : null}
+        {sessionExpired ? (
+          <Button asChild variant="outline">
+            <Link href="/login">Sign in again</Link>
+          </Button>
         ) : null}
       </div>
     </section>

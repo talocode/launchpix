@@ -18,18 +18,38 @@ export function BillingActions() {
       body: JSON.stringify({ packId })
     });
 
-    const json = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      setError(json.error || "Checkout could not start. Please try again.");
+    let json: Record<string, unknown> = {};
+    const contentType = res.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+      json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+    }
+
+    if (res.status === 401) {
+      setError("Session expired. Please sign in again to continue checkout.");
       setLoading(null);
       return;
     }
 
-    if (json.checkout_url || json.authorization_url) {
-      window.location.href = json.checkout_url || json.authorization_url;
+    if (!res.ok) {
+      const errorMessage = typeof json.error === "string" ? json.error : "Checkout could not start. Please try again.";
+      setError(errorMessage);
+      setLoading(null);
       return;
     }
 
+    const checkoutUrl =
+      typeof json.checkout_url === "string"
+        ? json.checkout_url
+        : typeof json.authorization_url === "string"
+          ? json.authorization_url
+          : null;
+
+    if (checkoutUrl) {
+      window.location.href = checkoutUrl;
+      return;
+    }
+
+    setError("Checkout response was incomplete. Please retry.");
     setLoading(null);
   }
 

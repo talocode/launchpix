@@ -42,7 +42,7 @@ Goal: reduce deployment risk and tighten operational readiness.
 
 - Verify all production env vars are documented and correctly used
 - Confirm Netlify build and runtime settings are stable
-- Confirm Paystack webhook behavior in production
+- Confirm Lemon Squeezy checkout and webhook behavior in production
 - Verify Supabase storage buckets, RLS, and auth settings in production
 - Review fallback behavior for missing external provider responses
 

@@ -40,7 +40,7 @@ const workflow = [
   {
     icon: Wand2,
     title: "Generate the asset plan",
-    text: "Mistral helps structure the copy and layout direction, then LaunchPix renders the actual assets through deterministic templates."
+    text: "Mistral helps structure the copy and layout direction, then LaunchPix generates polished image assets with an internal renderer as a fallback."
   },
   {
     icon: Layers3,
@@ -97,7 +97,7 @@ export default function AboutPage() {
             <p className="eyebrow">What it does</p>
             <h2 className="section-title mt-4">One guided workflow from brief to export.</h2>
             <p className="section-copy mx-auto mt-4">
-              LaunchPix combines a project brief, uploaded screenshots, structured AI planning, and deterministic rendering to produce reusable launch visuals that feel connected across channels.
+              LaunchPix combines a project brief, uploaded screenshots, structured AI planning, image generation, and fallback rendering to produce reusable launch visuals that feel connected across channels.
             </p>
           </div>
 
