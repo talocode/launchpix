@@ -105,7 +105,7 @@ Recommended validation commands:
 ## Demo video
 - The Remotion demo composition lives in `remotion/`.
 - Rendered output is written to `output/launchpix-demo.mp4`.
-- The video explains the core LaunchPix story: project brief, screenshot uploads, Mistral planning, deterministic rendering, exports, credits, and billing.
+- The video explains the core LaunchPix story: project brief, screenshot uploads, Mistral planning, image generation, fallback rendering, exports, credits, and billing.
 
 ## Deployment notes
 - Set all env vars in hosting provider.

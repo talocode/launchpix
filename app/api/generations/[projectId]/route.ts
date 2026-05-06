@@ -33,6 +33,8 @@ export async function POST(_: Request, { params }: { params: Promise<{ projectId
     const { generationId } = await runGenerationForProject(project, uploads);
     return NextResponse.json({ generationId }, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Generation failed" }, { status: 500 });
+    const message = error instanceof Error ? error.message : "Generation failed";
+    const status = message.toLowerCase().includes("no credits remaining") ? 402 : 500;
+    return NextResponse.json({ error: message }, { status });
   }
 }

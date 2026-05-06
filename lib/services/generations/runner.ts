@@ -48,10 +48,9 @@ async function generateMistralAssetWithRetry(input: Parameters<typeof generateMi
 
 export async function runGenerationForProject(project: ProjectRecord, uploads: UploadRecord[]) {
   const supabase = await createSupabaseServerClient();
-  const subscription = await consumeGenerationCredit(project.user_id);
-  const plan = PLAN_CONFIG[(subscription.plan as keyof typeof PLAN_CONFIG) || "credits"] || PLAN_CONFIG.credits;
   const generationStartedAt = Date.now();
   let creditRefunded = false;
+  let creditConsumed = false;
 
   const { data: generation, error: generationError } = await supabase
     .from("generations")
@@ -60,9 +59,13 @@ export async function runGenerationForProject(project: ProjectRecord, uploads: U
     .single();
 
   if (generationError || !generation) throw new Error(generationError?.message || "Failed to create generation record");
-  await trackEvent({ userId: project.user_id, projectId: project.id, eventType: "generation_started", metadata: { generationId: generation.id, projectName: project.name } });
 
   try {
+    const subscription = await consumeGenerationCredit(project.user_id);
+    creditConsumed = true;
+    const plan = PLAN_CONFIG[(subscription.plan as keyof typeof PLAN_CONFIG) || "credits"] || PLAN_CONFIG.credits;
+
+    await trackEvent({ userId: project.user_id, projectId: project.id, eventType: "generation_started", metadata: { generationId: generation.id, projectName: project.name } });
     await supabase.from("generations").update({ status: "analyzing" }).eq("id", generation.id);
 
     const planningInput = {
@@ -191,10 +194,11 @@ export async function runGenerationForProject(project: ProjectRecord, uploads: U
   } catch (error) {
     const message = error instanceof Error ? error.message : "Generation failed";
     try {
+      if (!creditConsumed) throw new Error("No reserved generation credit to refund.");
       await refundGenerationCredit(project.user_id, message, generation.id);
       creditRefunded = true;
     } catch (refundError) {
-      console.error("Failed to refund generation credit:", refundError instanceof Error ? refundError.message : refundError);
+      if (creditConsumed) console.error("Failed to refund generation credit:", refundError instanceof Error ? refundError.message : refundError);
     }
     await supabase.from("generations").update({ status: "failed", error_message: message }).eq("id", generation.id);
     await supabase.from("projects").update({ status: "failed" }).eq("id", project.id);

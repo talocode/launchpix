@@ -28,6 +28,11 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ checkout_url: data.checkoutUrl, authorization_url: data.checkoutUrl });
   } catch (error) {
+    const maybeRedirectDigest = typeof error === "object" && error !== null ? String((error as { digest?: string }).digest || "") : "";
+    if (maybeRedirectDigest.includes("NEXT_REDIRECT")) {
+      return NextResponse.json({ error: "Please sign in to start checkout." }, { status: 401 });
+    }
+
     const message = error instanceof Error ? error.message : "Checkout could not start. Please try again.";
     console.error("Lemon Squeezy checkout failed:", message);
 
