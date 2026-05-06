@@ -4,7 +4,7 @@ import Link from "next/link";
 import { signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { ChevronUp, CreditCard, Folder, Gem, Home, ImageIcon, LogOut, Menu, Plus, Settings, UserCircle, Wand2, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LaunchPixLogo } from "@/components/brand/logo";
 import { cn } from "@/lib/utils";
 
@@ -221,6 +221,15 @@ export function DashboardSidebar({
   const pathname = usePathname() ?? "";
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [mobileOpen]);
+
   return (
     <>
       <div className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#02040a]/95 lg:hidden">
@@ -236,17 +245,26 @@ export function DashboardSidebar({
             {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
           </button>
         </div>
+      </div>
 
-        {mobileOpen && (
-          <div className="mt-3 rounded-3xl border border-slate-200 bg-white p-3 shadow-[0_28px_90px_-48px_rgba(15,23,42,0.25)] dark:border-white/[0.08] dark:bg-[#050810] dark:shadow-[0_28px_90px_-48px_rgba(0,0,0,0.95)]">
+      {mobileOpen ? (
+        <div className="fixed inset-0 z-50 lg:hidden" aria-label="Mobile navigation">
+          <button
+            type="button"
+            aria-label="Close navigation backdrop"
+            onClick={() => setMobileOpen(false)}
+            className="absolute inset-0 bg-slate-950/45 backdrop-blur-sm"
+          />
+
+          <div className="absolute inset-x-3 top-20 max-h-[calc(100svh-5.75rem)] overflow-y-auto rounded-[28px] border border-slate-200 bg-white p-3 shadow-[0_28px_90px_-48px_rgba(15,23,42,0.25)] dark:border-white/[0.08] dark:bg-[#050810] dark:shadow-[0_28px_90px_-48px_rgba(0,0,0,0.95)]">
             <NavLinks pathname={pathname} onNavigate={() => setMobileOpen(false)} />
             <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_1fr]">
               <PlanCard credits={credits} planLabel={planLabel} />
               <AccountMenu userEmail={userEmail} variant="mobile" onNavigate={() => setMobileOpen(false)} />
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      ) : null}
 
       <aside className="hidden w-[236px] shrink-0 border-r border-slate-200 bg-white lg:block dark:border-white/[0.08] dark:bg-[#050810] xl:w-[244px]">
         <div className="sticky top-0 flex h-screen min-h-0 flex-col px-3 py-4">

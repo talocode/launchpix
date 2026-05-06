@@ -21,7 +21,7 @@ const sections = [
   {
     icon: Sparkles,
     title: "AI planning data",
-    text: "LaunchPix uses Mistral for structured planning: product context, audience, style direction, and copy structure. Rendering remains deterministic and template-driven inside LaunchPix."
+    text: "LaunchPix uses Mistral for structured planning and, when configured, image generation: product context, screenshots, audience, style direction, copy structure, and asset prompts. If image generation is unavailable, LaunchPix falls back to its internal renderer."
   },
   {
     icon: Receipt,

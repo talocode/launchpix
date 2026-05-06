@@ -26,7 +26,7 @@ const sections = [
   {
     icon: CheckCircle2,
     title: "Generated output",
-    text: "LaunchPix uses structured AI planning and deterministic templates. You are responsible for reviewing generated copy, visuals, claims, and layout before publishing them publicly."
+    text: "LaunchPix uses structured AI planning, Mistral image generation when configured, and internal fallback templates. You are responsible for reviewing generated copy, visuals, claims, and layout before publishing them publicly."
   },
   {
     icon: AlertTriangle,
