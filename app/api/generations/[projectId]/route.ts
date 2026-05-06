@@ -7,32 +7,45 @@ import { allowGenerationAttempt } from "@/lib/services/access/rate-limit";
 import { getAccessContext } from "@/lib/services/access/permissions";
 
 export async function GET(_: Request, { params }: { params: Promise<{ projectId: string }> }) {
-  const { user } = await requireUser();
-  const { projectId } = await params;
-  await getProjectOverview(projectId, user.id);
-  const generation = await getLatestGeneration(projectId);
-  const { subscription, plan } = await getAccessContext(user.id);
-  return NextResponse.json({ generation, credits: subscription.credits_remaining, plan: plan.id });
+  try {
+    const { user } = await requireUser();
+    const { projectId } = await params;
+    await getProjectOverview(projectId, user.id);
+    const generation = await getLatestGeneration(projectId);
+    const { subscription, plan } = await getAccessContext(user.id);
+    return NextResponse.json({ generation, credits: subscription.credits_remaining, plan: plan.id });
+  } catch (error) {
+    const maybeRedirectDigest = typeof error === "object" && error !== null ? String((error as { digest?: string }).digest || "") : "";
+    if (maybeRedirectDigest.includes("NEXT_REDIRECT")) {
+      return NextResponse.json({ error: "Please sign in to continue." }, { status: 401 });
+    }
+    throw error;
+  }
 }
 
 export async function POST(_: Request, { params }: { params: Promise<{ projectId: string }> }) {
-  const { user } = await requireUser();
-  const { projectId } = await params;
-
-  if (!allowGenerationAttempt(user.id)) {
-    return NextResponse.json({ error: "Too many generation attempts. Please wait and retry." }, { status: 429 });
-  }
-
-  const { project, uploads } = await getProjectOverview(projectId, user.id);
-
-  if (!uploads.length) {
-    return NextResponse.json({ error: "At least one screenshot is required." }, { status: 400 });
-  }
-
   try {
+    const { user } = await requireUser();
+    const { projectId } = await params;
+
+    if (!allowGenerationAttempt(user.id)) {
+      return NextResponse.json({ error: "Too many generation attempts. Please wait and retry." }, { status: 429 });
+    }
+
+    const { project, uploads } = await getProjectOverview(projectId, user.id);
+
+    if (!uploads.length) {
+      return NextResponse.json({ error: "At least one screenshot is required." }, { status: 400 });
+    }
+
     const { generationId } = await runGenerationForProject(project, uploads);
     return NextResponse.json({ generationId }, { status: 201 });
   } catch (error) {
+    const maybeRedirectDigest = typeof error === "object" && error !== null ? String((error as { digest?: string }).digest || "") : "";
+    if (maybeRedirectDigest.includes("NEXT_REDIRECT")) {
+      return NextResponse.json({ error: "Please sign in to continue." }, { status: 401 });
+    }
+
     const message = error instanceof Error ? error.message : "Generation failed";
     const status = message.toLowerCase().includes("no credits remaining") ? 402 : 500;
     return NextResponse.json({ error: message }, { status });
