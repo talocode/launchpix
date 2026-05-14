@@ -5,6 +5,7 @@ import { generateMistralAssetPng } from "@/lib/ai/mistral-image";
 import { createDeterministicGenerationPlan } from "@/lib/ai/mistral";
 import { generationPlanSchema } from "@/lib/ai/schemas/asset-plan";
 import { buildDeterministicAssets, renderAssetPng } from "@/lib/render/pipeline";
+import { runAssetQualityChecks } from "@/lib/render/quality";
 import type { ProjectRecord, UploadRecord } from "@/types/project";
 import { consumeGenerationCredit, getOrCreateSubscription, refundGenerationCredit } from "@/lib/services/billing/subscription";
 import { PLAN_CONFIG } from "@/lib/services/billing/plans";
@@ -99,11 +100,30 @@ export async function runGenerationForProject(project: ProjectRecord, uploads: U
     const deterministicAssets = buildDeterministicAssets(safePlan, uploads);
     const zip = new JSZip();
     const renderSources: Record<string, number> = {};
+    const qualityFailures: Array<{ assetType: string; issues: string[] }> = [];
 
     for (const [index, asset] of deterministicAssets.entries()) {
       let renderSource: "mistral_image_generation" | "deterministic_template" = "mistral_image_generation";
       let fullPng: Buffer | Uint8Array;
       const assetStartedAt = Date.now();
+      const qualityReport = runAssetQualityChecks({
+        assetType: asset.asset_type,
+        templateFamily: asset.template_family,
+        headline: asset.headline,
+        subheadline: asset.subheadline,
+        callouts: asset.callouts,
+        cta: safePlan.cta_line,
+        screenshotUrls: asset.screenshotUrls,
+        primaryColor: project.primary_color
+      });
+
+      if (!qualityReport.pass) {
+        qualityFailures.push({
+          assetType: asset.asset_type,
+          issues: qualityReport.issues.filter((issue) => issue.severity === "error").map((issue) => issue.message)
+        });
+        continue;
+      }
 
       try {
         fullPng = await generateMistralAssetWithRetry({
@@ -163,11 +183,19 @@ export async function runGenerationForProject(project: ProjectRecord, uploads: U
           callouts: asset.callouts,
           screenshot_ids: asset.screenshot_ids,
           render_duration_ms: Date.now() - assetStartedAt,
-          watermark_required: plan.watermarkPreview
+          watermark_required: plan.watermarkPreview,
+          quality_report: qualityReport
         }
       });
 
       zip.file(filename, fullPng);
+    }
+
+    if (qualityFailures.length) {
+      const failureMessage = qualityFailures
+        .map((failure) => `${failure.assetType}: ${failure.issues.join(" | ")}`)
+        .join(" ; ");
+      throw new Error(`Quality check failed. Fix the project brief and rerun generation. ${failureMessage}`);
     }
 
     const zipBuffer = await zip.generateAsync({ type: "uint8array" });

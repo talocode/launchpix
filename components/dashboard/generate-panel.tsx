@@ -129,7 +129,7 @@ export function GeneratePanel({ projectId, ready, missing, credits }: { projectI
         <div className="rounded-3xl border border-white/[0.08] bg-[#050810] p-4">
           <p className="text-sm font-semibold text-white">Output checklist</p>
           <div className="mt-3 grid gap-2 text-xs text-slate-400">
-            {["5 app listing frames", "1 promo tile", "1 hero banner", "ZIP export package"].map((item) => (
+            {["5 app listing frames", "1 promo tile", "1 hero banner", "Quality checks before export"].map((item) => (
               <div key={item} className="flex items-center gap-2">
                 <CheckCircle2 className="size-3.5 text-slate-400" />
                 {item}
@@ -160,6 +160,9 @@ export function GeneratePanel({ projectId, ready, missing, credits }: { projectI
           <Button asChild variant="outline">
             <Link href="/login">Sign in again</Link>
           </Button>
+        ) : null}
+        {generation?.status === "failed" && !needsCredits && !sessionExpired ? (
+          <p className="text-xs text-slate-500 sm:ml-1">If quality checks fail, shorten copy lines, keep callouts concise, and ensure screenshots are uploaded.</p>
         ) : null}
       </div>
     </section>
