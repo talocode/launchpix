@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import { AlertCircle, CheckCircle2, Clock3, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-type Gen = { id: string; status: string; error_message?: string | null } | null;
+type QualityFailure = { asset_type: string; code: string; message: string };
+type Gen = { id: string; status: string; error_message?: string | null; style_json?: { quality_failures?: QualityFailure[] } | null } | null;
 
 const statusLabel: Record<string, string> = {
   queued: "Queued for processing",
@@ -28,6 +29,19 @@ export function GeneratePanel({ projectId, ready, missing, credits }: { projectI
 
   const currentStatus = generation?.status || "idle";
   const busy = ["queued", "analyzing", "generating_copy", "rendering_assets"].includes(currentStatus);
+  const qualityFailures = generation?.style_json?.quality_failures || [];
+
+  function fixActionHref(code: string) {
+    if (code.includes("screenshot")) return `/dashboard/projects/new?projectId=${projectId}&step=2`;
+    return `/dashboard/projects/new?projectId=${projectId}&step=1`;
+  }
+
+  function fixActionLabel(code: string) {
+    if (code.includes("screenshot")) return "Upload screenshots";
+    if (code.includes("headline") || code.includes("subheadline") || code.includes("callout") || code.includes("cta")) return "Edit project brief";
+    if (code.includes("contrast")) return "Adjust style/color";
+    return "Review project details";
+  }
 
   async function fetchState() {
     const res = await fetch(`/api/generations/${projectId}`);
@@ -161,7 +175,23 @@ export function GeneratePanel({ projectId, ready, missing, credits }: { projectI
             <Link href="/login">Sign in again</Link>
           </Button>
         ) : null}
-        {generation?.status === "failed" && !needsCredits && !sessionExpired ? (
+        {generation?.status === "failed" && qualityFailures.length > 0 ? (
+          <div className="w-full rounded-2xl border border-rose-400/20 bg-rose-400/10 p-3 text-xs text-rose-200">
+            <p className="font-semibold">Quality checks blocked export. Fix these and regenerate:</p>
+            <div className="mt-2 space-y-2">
+              {qualityFailures.slice(0, 6).map((failure, index) => (
+                <div key={`${failure.asset_type}-${failure.code}-${index}`} className="rounded-xl border border-rose-300/15 bg-[#090d16] p-2">
+                  <p className="font-medium text-rose-100">{failure.asset_type.replaceAll("_", " ")}</p>
+                  <p className="mt-1 text-rose-200/90">{failure.message}</p>
+                  <a href={fixActionHref(failure.code)} className="mt-1 inline-flex text-cyan-200 underline underline-offset-4">
+                    {fixActionLabel(failure.code)}
+                  </a>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+        {generation?.status === "failed" && !needsCredits && !sessionExpired && qualityFailures.length === 0 ? (
           <p className="text-xs text-slate-500 sm:ml-1">If quality checks fail, shorten copy lines, keep callouts concise, and ensure screenshots are uploaded.</p>
         ) : null}
       </div>

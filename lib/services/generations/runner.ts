@@ -15,6 +15,22 @@ const ASSET_BUCKET = process.env.STORAGE_BUCKET_ASSETS || "launchpix-assets";
 const MISTRAL_ASSET_TIMEOUT_MS = 45_000;
 const MISTRAL_RENDER_ATTEMPTS = 2;
 
+type QualityFailureDetail = {
+  asset_type: string;
+  code: string;
+  message: string;
+};
+
+class QualityGateError extends Error {
+  details: QualityFailureDetail[];
+
+  constructor(details: QualityFailureDetail[]) {
+    super("Quality check failed. Fix the flagged items and rerun generation.");
+    this.name = "QualityGateError";
+    this.details = details;
+  }
+}
+
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -100,7 +116,7 @@ export async function runGenerationForProject(project: ProjectRecord, uploads: U
     const deterministicAssets = buildDeterministicAssets(safePlan, uploads);
     const zip = new JSZip();
     const renderSources: Record<string, number> = {};
-    const qualityFailures: Array<{ assetType: string; issues: string[] }> = [];
+    const qualityFailures: QualityFailureDetail[] = [];
 
     for (const [index, asset] of deterministicAssets.entries()) {
       let renderSource: "mistral_image_generation" | "deterministic_template" = "mistral_image_generation";
@@ -118,10 +134,13 @@ export async function runGenerationForProject(project: ProjectRecord, uploads: U
       });
 
       if (!qualityReport.pass) {
-        qualityFailures.push({
-          assetType: asset.asset_type,
-          issues: qualityReport.issues.filter((issue) => issue.severity === "error").map((issue) => issue.message)
-        });
+        for (const issue of qualityReport.issues.filter((item) => item.severity === "error")) {
+          qualityFailures.push({
+            asset_type: asset.asset_type,
+            code: issue.code,
+            message: issue.message
+          });
+        }
         continue;
       }
 
@@ -192,10 +211,7 @@ export async function runGenerationForProject(project: ProjectRecord, uploads: U
     }
 
     if (qualityFailures.length) {
-      const failureMessage = qualityFailures
-        .map((failure) => `${failure.assetType}: ${failure.issues.join(" | ")}`)
-        .join(" ; ");
-      throw new Error(`Quality check failed. Fix the project brief and rerun generation. ${failureMessage}`);
+      throw new QualityGateError(qualityFailures);
     }
 
     const zipBuffer = await zip.generateAsync({ type: "uint8array" });
@@ -221,6 +237,20 @@ export async function runGenerationForProject(project: ProjectRecord, uploads: U
     return { generationId: generation.id };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Generation failed";
+    const qualityDetails = error instanceof QualityGateError ? error.details : null;
+    if (qualityDetails?.length) {
+      await trackEvent({
+        userId: project.user_id,
+        projectId: project.id,
+        eventType: "quality_failed",
+        metadata: {
+          generationId: generation.id,
+          projectName: project.name,
+          failure_codes: qualityDetails.map((item) => item.code),
+          failed_assets: qualityDetails.map((item) => item.asset_type)
+        }
+      });
+    }
     try {
       if (!creditConsumed) throw new Error("No reserved generation credit to refund.");
       await refundGenerationCredit(project.user_id, message, generation.id);
@@ -228,7 +258,13 @@ export async function runGenerationForProject(project: ProjectRecord, uploads: U
     } catch (refundError) {
       if (creditConsumed) console.error("Failed to refund generation credit:", refundError instanceof Error ? refundError.message : refundError);
     }
-    await supabase.from("generations").update({ status: "failed", error_message: message }).eq("id", generation.id);
+    const generationFailureUpdate: Record<string, unknown> = {
+      status: "failed",
+      error_message: message
+    };
+    if (qualityDetails?.length) generationFailureUpdate.style_json = { quality_failures: qualityDetails };
+
+    await supabase.from("generations").update(generationFailureUpdate).eq("id", generation.id);
     await supabase.from("projects").update({ status: "failed" }).eq("id", project.id);
     await trackEvent({
       userId: project.user_id,
