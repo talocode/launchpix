@@ -15,6 +15,12 @@ const ASSET_BUCKET = process.env.STORAGE_BUCKET_ASSETS || "launchpix-assets";
 const MISTRAL_ASSET_TIMEOUT_MS = 45_000;
 const MISTRAL_RENDER_ATTEMPTS = 2;
 
+type QualityFailureDetail = {
+  asset_type: string;
+  code: string;
+  message: string;
+};
+
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
