@@ -6,7 +6,13 @@ import { useRouter } from "next/navigation";
 import { AlertCircle, CheckCircle2, Clock3, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-type Gen = { id: string; status: string; error_message?: string | null } | null;
+type QualityIssue = { asset_type: string; code: string; message: string };
+type Gen = {
+  id: string;
+  status: string;
+  error_message?: string | null;
+  style_json?: { quality_failures?: QualityIssue[]; quality_warnings?: QualityIssue[] } | null;
+} | null;
 
 const statusLabel: Record<string, string> = {
   queued: "Queued for processing",
@@ -28,6 +34,32 @@ export function GeneratePanel({ projectId, ready, missing, credits }: { projectI
 
   const currentStatus = generation?.status || "idle";
   const busy = ["queued", "analyzing", "generating_copy", "rendering_assets"].includes(currentStatus);
+  const qualityFailures = generation?.style_json?.quality_failures || [];
+  const qualityWarnings = generation?.style_json?.quality_warnings || [];
+
+  function fixActionHref(code: string) {
+    if (code.includes("screenshot")) return `/dashboard/projects/new?projectId=${projectId}&step=2`;
+    return `/dashboard/projects/new?projectId=${projectId}&step=1`;
+  }
+
+  function fixActionLabel(code: string) {
+    if (code.includes("screenshot")) return "Upload screenshots";
+    if (code.includes("headline") || code.includes("subheadline") || code.includes("callout") || code.includes("cta")) return "Edit project brief";
+    if (code.includes("contrast")) return "Adjust style/color";
+    return "Review project details";
+  }
+
+  const groupedFailures = qualityFailures.reduce<Record<string, QualityIssue[]>>((acc, item) => {
+    const key = `${item.asset_type}::${item.code}`;
+    acc[key] = acc[key] ? [...acc[key], item] : [item];
+    return acc;
+  }, {});
+
+  const groupedWarnings = qualityWarnings.reduce<Record<string, QualityIssue[]>>((acc, item) => {
+    const key = `${item.asset_type}::${item.code}`;
+    acc[key] = acc[key] ? [...acc[key], item] : [item];
+    return acc;
+  }, {});
 
   async function fetchState() {
     const res = await fetch(`/api/generations/${projectId}`);
@@ -161,7 +193,54 @@ export function GeneratePanel({ projectId, ready, missing, credits }: { projectI
             <Link href="/login">Sign in again</Link>
           </Button>
         ) : null}
-        {generation?.status === "failed" && !needsCredits && !sessionExpired ? (
+        {generation?.status === "failed" && qualityFailures.length > 0 ? (
+          <div className="w-full rounded-2xl border border-rose-400/20 bg-rose-400/10 p-3 text-xs text-rose-200">
+            <p className="font-semibold">Quality checks blocked export. Fix these and regenerate:</p>
+            <div className="mt-2 space-y-2">
+              {Object.entries(groupedFailures)
+                .slice(0, 6)
+                .map(([key, failures]) => {
+                  const [assetType, code] = key.split("::");
+                  const first = failures[0];
+                  return (
+                    <div key={key} className="rounded-xl border border-rose-300/15 bg-[#090d16] p-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="font-medium text-rose-100">{assetType.replaceAll("_", " ")}</p>
+                        <span className="rounded-full border border-rose-300/20 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-rose-200">{code}</span>
+                      </div>
+                      <p className="mt-1 text-rose-200/90">{first.message}</p>
+                      <a href={fixActionHref(code)} className="mt-1 inline-flex text-cyan-200 underline underline-offset-4">
+                        {fixActionLabel(code)}
+                      </a>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+        ) : null}
+        {generation?.status === "completed" && qualityWarnings.length > 0 ? (
+          <div className="w-full rounded-2xl border border-amber-400/20 bg-amber-400/10 p-3 text-xs text-amber-200">
+            <p className="font-semibold">Export ready, but quality warnings were detected:</p>
+            <div className="mt-2 space-y-2">
+              {Object.entries(groupedWarnings)
+                .slice(0, 4)
+                .map(([key, warnings]) => {
+                  const [assetType, code] = key.split("::");
+                  const first = warnings[0];
+                  return (
+                    <div key={key} className="rounded-xl border border-amber-300/20 bg-[#090d16] p-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="font-medium text-amber-100">{assetType.replaceAll("_", " ")}</p>
+                        <span className="rounded-full border border-amber-300/20 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-amber-200">{code}</span>
+                      </div>
+                      <p className="mt-1 text-amber-200/90">{first.message}</p>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+        ) : null}
+        {generation?.status === "failed" && !needsCredits && !sessionExpired && qualityFailures.length === 0 ? (
           <p className="text-xs text-slate-500 sm:ml-1">If quality checks fail, shorten copy lines, keep callouts concise, and ensure screenshots are uploaded.</p>
         ) : null}
       </div>
