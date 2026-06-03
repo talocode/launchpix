@@ -4,22 +4,22 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 
 export const metadata: Metadata = {
-  title: "LaunchPix",
-  description: "Turn raw screenshots into polished launch visuals in minutes.",
+  title: "Talocode LaunchPix",
+  description: "API-first, open-source launch asset generation for developer teams.",
   icons: {
     icon: "/icon.svg"
   },
   openGraph: {
-    title: "LaunchPix",
-    description: "Deterministic AI-assisted launch visuals for product teams.",
-    url: "https://launchpix.app",
-    siteName: "LaunchPix",
+    title: "Talocode LaunchPix",
+    description: "API-first launch visual generation with deterministic fallbacks.",
+    url: "https://launchpix.talocode.com",
+    siteName: "Talocode LaunchPix",
     type: "website"
   },
   twitter: {
     card: "summary_large_image",
-    title: "LaunchPix",
-    description: "Turn raw screenshots into polished launch visuals in minutes."
+    title: "Talocode LaunchPix",
+    description: "Open-source launch visuals API for product and growth teams."
   }
 };
 

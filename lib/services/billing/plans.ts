@@ -81,27 +81,27 @@ export const PLAN_CONFIG: Record<PlanId, PlanConfig> = {
 export const CREDIT_PACKS: CreditPackConfig[] = [
   {
     id: "starter_credits",
-    label: "Starter credits",
-    description: "A light top-up for one focused launch cycle.",
+    label: "Launch credits",
+    description: "A small one-time top-up for your next generation run.",
     creditsGranted: PLAN_CONFIG.starter_credits.creditsGranted,
-    priceLabel: "Pay once",
+    priceLabel: "$1 / credit",
     variantEnvKey: "LEMON_SQUEEZY_STARTER_CREDITS_VARIANT_ID"
   },
   {
     id: "creator_credits",
-    label: "Creator credits",
-    description: "Best for founders testing several products or campaigns.",
+    label: "Growth credits",
+    description: "For repeated launch runs across more than one project or channel.",
     creditsGranted: PLAN_CONFIG.creator_credits.creditsGranted,
-    priceLabel: "Pay once",
+    priceLabel: "Volume discount",
     variantEnvKey: "LEMON_SQUEEZY_CREATOR_CREDITS_VARIANT_ID",
     featured: true
   },
   {
     id: "studio_credits",
-    label: "Studio credits",
-    description: "Higher volume credits for teams producing launch visuals often.",
+    label: "Scale credits",
+    description: "For teams shipping launch assets regularly through the API.",
     creditsGranted: PLAN_CONFIG.studio_credits.creditsGranted,
-    priceLabel: "Pay once",
+    priceLabel: "Best value",
     variantEnvKey: "LEMON_SQUEEZY_STUDIO_CREDITS_VARIANT_ID"
   }
 ];

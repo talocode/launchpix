@@ -28,7 +28,7 @@ export default async function GeneratePage({ params }: { params: Promise<{ id: s
             <p className="dashboard-label">Generation workspace</p>
             <h2 className="mt-2 truncate text-2xl font-semibold sm:text-3xl">{project.name}</h2>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-              {project.description || "Add a concise project description so LaunchPix can build a sharper asset story."}
+              {project.description || "Add a concise project description so Talocode LaunchPix can build a sharper asset story."}
             </p>
           </div>
 

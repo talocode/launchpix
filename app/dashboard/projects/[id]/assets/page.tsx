@@ -57,7 +57,7 @@ export default async function AssetsPage({ params }: { params: Promise<{ id: str
                 { label: "Completed", value: completedAt, icon: Clock3 }
               ].map((item) => (
                 <div key={item.label} className="surface-muted min-w-[170px] p-4">
-                  <item.icon className="size-5 text-cyan-300" />
+                  <item.icon className="size-5 text-foreground" />
                   <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">{item.label}</p>
                   <p className="mt-2 truncate text-sm font-semibold text-slate-950 dark:text-white">{item.value}</p>
                 </div>
@@ -87,7 +87,7 @@ export default async function AssetsPage({ params }: { params: Promise<{ id: str
                       Status: <span className="font-medium text-foreground">{item.status.replaceAll("_", " ")}</span>
                     </p>
                   </div>
-                  {item.error_message ? <p className="text-rose-500">{item.error_message}</p> : null}
+                  {item.error_message ? <p className="text-muted-foreground">{item.error_message}</p> : null}
                 </div>
               ))}
             </div>

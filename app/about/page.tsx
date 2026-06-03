@@ -6,17 +6,17 @@ import { Button } from "@/components/ui/button";
 import { FREE_SIGNUP_CREDITS } from "@/lib/services/billing/plans";
 
 export const metadata: Metadata = {
-  title: "About | LaunchPix",
-  description: "Learn what LaunchPix does, who it is for, how the generation workflow works, and why it uses credits instead of subscriptions.",
+  title: "About | Talocode LaunchPix",
+  description: "Learn how Talocode LaunchPix works as an API-first launch asset service for developers and product teams.",
   openGraph: {
-    title: "About LaunchPix",
-    description: "LaunchPix turns raw screenshots into launch-ready app listing visuals, promo tiles, hero banners, and export packs.",
-    url: "https://launchpix.app/about"
+    title: "About Talocode LaunchPix",
+    description: "Talocode LaunchPix turns raw screenshots into launch-ready app listing visuals, promo tiles, hero banners, and export packs.",
+    url: "https://launchpix.talocode.com/about"
   },
   twitter: {
     card: "summary_large_image",
-    title: "About LaunchPix",
-    description: "A detailed overview of LaunchPix, the product workflow, credits, exports, and launch asset generation."
+    title: "About Talocode LaunchPix",
+    description: "A detailed overview of Talocode LaunchPix, the API workflow, usage credits, exports, and launch asset generation."
   }
 };
 
@@ -35,7 +35,7 @@ const workflow = [
   {
     icon: FileImage,
     title: "Upload screenshots",
-    text: "Add the product screenshots LaunchPix should turn into listing frames, promo tiles, and hero banners."
+    text: "Add the source screenshots LaunchPix should turn into listing frames, promo tiles, and hero banners."
   },
   {
     icon: Wand2,
@@ -59,7 +59,7 @@ const outputs = [
 
 const audiences = [
   "Solo founders preparing a first launch",
-  "SaaS teams shipping product updates often",
+  "Product teams shipping product updates often",
   "App and extension builders refreshing store listings",
   "Agencies producing launch visuals for multiple clients",
   "Growth teams testing new campaign creative"
@@ -68,15 +68,15 @@ const audiences = [
 export default function AboutPage() {
   return (
     <MarketingPageShell
-      eyebrow="About LaunchPix"
-      title="LaunchPix turns unfinished screenshots into launch-ready visual packs."
-      description="LaunchPix is a focused workspace for founders, SaaS teams, and agencies that need polished product visuals without rebuilding every screenshot layout manually."
+      eyebrow="About Talocode LaunchPix"
+      title="Talocode LaunchPix turns unfinished screenshots into launch-ready visual packs."
+      description="Talocode LaunchPix is a focused API-first service for founders, product teams, and agencies that need polished product visuals without rebuilding every screenshot layout manually."
     >
       <div className="space-y-12">
-        <section className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+        <section className="grid gap-5 lg:grid-cols-[0.95fr_1.05fr]">
           <div className="surface-muted p-6 sm:p-8">
             <p className="eyebrow">The problem</p>
-            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-slate-950 dark:text-white">Great products can still look unready at launch.</h2>
+            <h2 className="mt-4 font-mono text-3xl font-light tracking-[-0.05em] text-foreground">Great products can still look unready at launch.</h2>
             <p className="mt-4 text-sm leading-7 text-muted-foreground">
               Launch week creates a practical design gap: the product exists, but the screenshots still need framing, hierarchy, captions, sizing, and a consistent visual system.
             </p>
@@ -85,7 +85,7 @@ export default function AboutPage() {
           <div className="grid gap-3">
             {problems.map((item) => (
               <div key={item} className="surface-muted flex items-start gap-3 p-5">
-                <CheckCircle2 className="mt-1 size-4 shrink-0 text-cyan-300" />
+                <CheckCircle2 className="mt-1 size-4 shrink-0 text-foreground" />
                 <p className="text-sm leading-7 text-muted-foreground">{item}</p>
               </div>
             ))}
@@ -104,10 +104,10 @@ export default function AboutPage() {
           <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {workflow.map((item) => (
               <div key={item.title} className="surface-muted p-5">
-                <div className="flex size-11 items-center justify-center rounded-2xl border border-slate-200 bg-white dark:border-white/[0.08] dark:bg-[#050810]">
-                  <item.icon className="size-5 text-cyan-300" />
+                <div className="flex size-11 items-center justify-center rounded-[4px] border border-border/80 bg-transparent">
+                  <item.icon className="size-5 text-foreground" />
                 </div>
-                <h3 className="mt-5 text-lg font-semibold text-slate-950 dark:text-white">{item.title}</h3>
+                <h3 className="mt-5 text-lg font-semibold text-foreground">{item.title}</h3>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">{item.text}</p>
               </div>
             ))}
@@ -117,11 +117,11 @@ export default function AboutPage() {
         <section className="grid gap-5 lg:grid-cols-2">
           <div className="surface-muted p-6 sm:p-8">
             <p className="eyebrow">What you get</p>
-            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-slate-950 dark:text-white">A complete launch pack, not a loose image export.</h2>
+            <h2 className="mt-4 font-mono text-3xl font-light tracking-[-0.05em] text-foreground">A complete launch pack, not a loose image export.</h2>
             <div className="mt-6 space-y-4">
               {outputs.map((item) => (
                 <div key={item} className="flex items-start gap-3 text-sm leading-7 text-muted-foreground">
-                  <Sparkles className="mt-1 size-4 shrink-0 text-cyan-300" />
+                  <Sparkles className="mt-1 size-4 shrink-0 text-foreground" />
                   <span>{item}</span>
                 </div>
               ))}
@@ -130,11 +130,11 @@ export default function AboutPage() {
 
           <div className="surface-muted p-6 sm:p-8">
             <p className="eyebrow">Who it is for</p>
-            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-slate-950 dark:text-white">Built for people shipping product, not managing design files.</h2>
+            <h2 className="mt-4 font-mono text-3xl font-light tracking-[-0.05em] text-foreground">Built for people shipping product, not managing design files.</h2>
             <div className="mt-6 space-y-4">
               {audiences.map((item) => (
                 <div key={item} className="flex items-start gap-3 text-sm leading-7 text-muted-foreground">
-                  <Zap className="mt-1 size-4 shrink-0 text-cyan-300" />
+                  <Zap className="mt-1 size-4 shrink-0 text-foreground" />
                   <span>{item}</span>
                 </div>
               ))}
@@ -143,24 +143,24 @@ export default function AboutPage() {
         </section>
 
         <section className="surface overflow-hidden p-6 sm:p-8">
-          <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+          <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
             <div>
               <p className="eyebrow">Credits and billing</p>
-              <h2 className="section-title mt-4">LaunchPix uses credits, not subscriptions.</h2>
+              <h2 className="section-title mt-4">Talocode LaunchPix uses usage credits, not subscriptions.</h2>
               <p className="section-copy mt-4">
-                Every account starts with {FREE_SIGNUP_CREDITS} credits. A generation run consumes one credit. When the balance runs out, users buy one-time credit packs through Lemon Squeezy and continue generating.
+                Every account starts with {FREE_SIGNUP_CREDITS} credits. A generation run consumes one credit. When the balance runs out, users buy one-time credit top-ups through Lemon Squeezy and continue generating.
               </p>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3">
               {[
                 ["Included", `${FREE_SIGNUP_CREDITS}`, "credits at signup"],
-                ["Model", "One-time", "credit packs"],
+                ["Model", "One-time", "credit top-ups"],
                 ["Provider", "Lemon", "Squeezy checkout"]
               ].map(([label, value, detail]) => (
                 <div key={label} className="surface-muted p-5 text-center">
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">{label}</p>
-                  <p className="mt-3 text-2xl font-semibold text-slate-950 dark:text-white">{value}</p>
+                  <p className="mt-3 font-mono text-2xl font-light tracking-[-0.04em] text-foreground">{value}</p>
                   <p className="mt-2 text-xs leading-5 text-muted-foreground">{detail}</p>
                 </div>
               ))}
@@ -169,12 +169,12 @@ export default function AboutPage() {
         </section>
 
         <section className="surface-muted p-6 text-center sm:p-8">
-          <CreditCard className="mx-auto size-6 text-cyan-300" />
-          <h2 className="mx-auto mt-5 max-w-2xl text-3xl font-semibold tracking-tight text-slate-950 dark:text-white">
+          <CreditCard className="mx-auto size-6 text-foreground" />
+          <h2 className="mx-auto mt-5 max-w-2xl font-mono text-3xl font-light tracking-[-0.05em] text-foreground">
             The goal is simple: help products look ready when the launch traffic arrives.
           </h2>
           <p className="section-copy mx-auto mt-4 max-w-2xl">
-            LaunchPix removes repetitive visual production from the launch process so teams can focus on positioning, shipping, and learning from the market.
+            Talocode LaunchPix removes repetitive visual production from the launch process so teams can focus on positioning, shipping, and learning from the market.
           </p>
           <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
             <Button asChild size="lg">
@@ -184,7 +184,7 @@ export default function AboutPage() {
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline">
-              <Link href="/pricing">View credit packs</Link>
+              <Link href="/pricing">View credits</Link>
             </Button>
           </div>
         </section>

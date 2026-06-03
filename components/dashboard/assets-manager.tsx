@@ -80,7 +80,7 @@ export function AssetsManager({
   return (
     <div className="space-y-6">
       {!canDownloadFull ? (
-        <Card className="border-primary/20 bg-primary/5">
+        <Card className="border-border/80 bg-transparent">
           <CardContent className="space-y-3 p-5 text-sm text-muted-foreground">
             <p className="font-semibold text-foreground">Credits are required for full export.</p>
             <p>Buy credits when your balance runs out to continue downloading full-resolution PNG and ZIP exports.</p>
@@ -97,7 +97,7 @@ export function AssetsManager({
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <p className="dashboard-label">Generated pack</p>
-                <h2 className="mt-3 text-2xl font-semibold text-slate-950 dark:text-white">Review the pack before you ship it.</h2>
+                <h2 className="mt-3 font-mono text-2xl font-light tracking-[-0.04em] text-foreground">Review the pack before you ship it.</h2>
                 <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground">
                   This is the finished output from your latest generation: inspect the hierarchy, download files, or adjust copy and rerender individual assets.
                 </p>
@@ -126,7 +126,7 @@ export function AssetsManager({
               ].map(([label, value]) => (
                 <div key={label} className="surface-muted p-4">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
-                  <p className="mt-2 text-xl font-semibold text-slate-950 dark:text-white">{value}</p>
+                  <p className="mt-2 text-xl font-semibold text-foreground">{value}</p>
                 </div>
               ))}
             </div>
@@ -137,16 +137,18 @@ export function AssetsManager({
               <>
                 <div className="flex items-center justify-between px-1 pb-3 text-xs text-muted-foreground">
                   <span className="font-semibold uppercase tracking-[0.18em]">{assetPurpose(heroAsset.asset_type)}</span>
-                  <span>{heroAsset.width} x {heroAsset.height}</span>
+                  <span>
+                    {heroAsset.width} x {heroAsset.height}
+                  </span>
                 </div>
                 <img
                   src={heroAsset.preview_url || heroAsset.file_url}
                   alt={assetLabel(heroAsset.asset_type)}
-                  className="aspect-video w-full rounded-[18px] border border-border/60 bg-card object-cover"
+                  className="aspect-video w-full rounded-[4px] border border-border/80 bg-card object-cover"
                 />
               </>
             ) : (
-              <div className="grid aspect-video place-items-center rounded-[18px] border border-dashed border-border/70 text-sm text-muted-foreground">
+              <div className="grid aspect-video place-items-center rounded-[4px] border border-dashed border-border/80 text-sm text-muted-foreground">
                 No preview asset found.
               </div>
             )}
@@ -158,42 +160,44 @@ export function AssetsManager({
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="dashboard-label">Asset review</p>
-            <h2 className="mt-2 text-2xl font-semibold text-slate-950 dark:text-white">All generated files</h2>
+            <h2 className="mt-2 font-mono text-2xl font-light tracking-[-0.04em] text-foreground">All generated files</h2>
           </div>
           <p className="max-w-xl text-sm leading-6 text-muted-foreground">
             Download the final asset directly, or edit the text layer and rerender when a headline needs more polish.
           </p>
         </div>
-        {actionError ? <p className="rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-400">{actionError}</p> : null}
+        {actionError ? <p className="rounded-[4px] border border-border/80 bg-transparent px-4 py-3 text-sm text-foreground">{actionError}</p> : null}
 
         <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
           {assets.map((asset) => (
             <Card key={asset.id} className="overflow-hidden">
-              <div className="flex items-center justify-between border-b border-border/60 px-4 py-3 text-xs text-muted-foreground">
+              <div className="flex items-center justify-between border-b border-border/80 px-4 py-3 text-xs text-muted-foreground">
                 <span className="inline-flex items-center gap-2 font-semibold uppercase tracking-[0.16em]">
                   <ImageIcon className="size-3.5" />
                   {assetPurpose(asset.asset_type)}
                 </span>
-                <span>{asset.width} x {asset.height}</span>
+                <span>
+                  {asset.width} x {asset.height}
+                </span>
               </div>
 
               <CardContent className="space-y-4 p-4">
-                <img src={asset.preview_url || asset.file_url} alt={assetLabel(asset.asset_type)} className="aspect-[16/10] w-full rounded-[18px] border border-border/60 bg-card object-cover" />
+                <img src={asset.preview_url || asset.file_url} alt={assetLabel(asset.asset_type)} className="aspect-[16/10] w-full rounded-[4px] border border-border/80 bg-card object-cover" />
 
                 <div>
-                  <h3 className="text-base font-semibold text-slate-950 dark:text-white">{assetLabel(asset.asset_type)}</h3>
+                  <h3 className="text-base font-semibold text-foreground">{assetLabel(asset.asset_type)}</h3>
                   <p className="mt-1 text-sm text-muted-foreground">Template: {(asset.metadata_json as { template_family?: string } | null)?.template_family || "minimal"}</p>
-                  <p className="mt-2 inline-flex items-center gap-2 rounded-full border border-border/70 px-3 py-1 text-xs text-muted-foreground">
+                  <p className="mt-2 inline-flex items-center gap-2 rounded-none border border-border/80 px-3 py-1 text-xs text-muted-foreground">
                     <Sparkles className="size-3.5" />
                     {(asset.metadata_json as { render_source?: string } | null)?.render_source === "mistral_image_generation" ? "Mistral image generated" : "Template fallback"}
                   </p>
                   {warningMessages(asset).length ? (
-                    <div className="mt-3 rounded-xl border border-amber-400/20 bg-amber-400/10 p-2.5">
-                      <p className="inline-flex items-center gap-2 text-xs font-semibold text-amber-300">
+                    <div className="mt-3 rounded-[4px] border border-border/80 bg-transparent p-2.5">
+                      <p className="inline-flex items-center gap-2 text-xs font-semibold text-foreground">
                         <AlertTriangle className="size-3.5" />
                         Quality warnings
                       </p>
-                      <div className="mt-1 space-y-1 text-xs text-amber-200/90">
+                      <div className="mt-1 space-y-1 text-xs text-muted-foreground">
                         {warningMessages(asset).map((message, index) => (
                           <p key={`${asset.id}-warning-${index}`}>{message}</p>
                         ))}
@@ -230,8 +234,12 @@ export function AssetsManager({
                       <option value="gradient">Gradient</option>
                     </select>
                     <div className="flex gap-2">
-                      <Button size="sm" disabled={pending} onClick={() => startTransition(() => void save(asset.id))}>Save changes</Button>
-                      <Button size="sm" variant="outline" onClick={() => setEditing(null)}>Cancel</Button>
+                      <Button size="sm" disabled={pending} onClick={() => startTransition(() => void save(asset.id))}>
+                        Save changes
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setEditing(null)}>
+                        Cancel
+                      </Button>
                     </div>
                   </div>
                 ) : null}

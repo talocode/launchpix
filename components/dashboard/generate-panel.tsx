@@ -118,52 +118,52 @@ export function GeneratePanel({ projectId, ready, missing, credits }: { projectI
             Five listing frames, one promo tile, and one hero banner generated from your screenshots and structured copy plan.
           </p>
         </div>
-        <div className="inline-flex w-fit items-center gap-2 rounded-2xl border border-white/[0.08] bg-white/[0.04] px-3 py-2 text-xs font-medium text-slate-300">
-          {busy ? <Clock3 className="size-4 animate-pulse text-slate-300" /> : ready ? <CheckCircle2 className="size-4 text-emerald-300" /> : <AlertCircle className="size-4 text-amber-300" />}
+        <div className="inline-flex w-fit items-center gap-2 rounded-[4px] border border-border/80 bg-transparent px-3 py-2 text-xs font-medium text-muted-foreground">
+          {busy ? <Clock3 className="size-4 animate-pulse text-muted-foreground" /> : ready ? <CheckCircle2 className="size-4 text-foreground" /> : <AlertCircle className="size-4 text-foreground" />}
           {statusLabel[currentStatus] || "Ready when you are"}
         </div>
       </div>
 
       <div className="grid gap-3 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-3xl border border-white/[0.08] bg-[#050810] p-4">
+        <div className="rounded-[4px] border border-border/80 bg-transparent p-4">
           {!ready ? (
             <div className="flex gap-3">
-              <span className="grid size-9 shrink-0 place-items-center rounded-2xl bg-amber-300/10">
-                <AlertCircle className="size-5 text-amber-300" />
+              <span className="grid size-9 shrink-0 place-items-center rounded-[4px] border border-border/80 bg-transparent">
+                <AlertCircle className="size-5 text-foreground" />
               </span>
               <div>
-                <p className="text-sm font-semibold text-white">
+                <p className="text-sm font-semibold text-foreground">
                   {blockedByCredits ? "Add credits to generate this launch pack." : "Complete the missing setup before generating."}
                 </p>
-                <p className="mt-1 text-sm leading-6 text-slate-400">Missing: {missingText}.</p>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">Missing: {missingText}.</p>
               </div>
             </div>
           ) : (
             <div className="flex gap-3">
-              <span className="grid size-9 shrink-0 place-items-center rounded-2xl bg-emerald-300/10">
-                <Sparkles className="size-5 text-emerald-300" />
+              <span className="grid size-9 shrink-0 place-items-center rounded-[4px] border border-border/80 bg-transparent">
+                <Sparkles className="size-5 text-foreground" />
               </span>
               <div>
-                <p className="text-sm font-semibold text-white">Everything is ready for generation.</p>
-                <p className="mt-1 text-sm leading-6 text-slate-400">Start the render and LaunchPix will redirect you to the asset view when the pack is complete.</p>
+                <p className="text-sm font-semibold text-foreground">Everything is ready for generation.</p>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">Start the render and LaunchPix will redirect you to the asset view when the pack is complete.</p>
               </div>
             </div>
           )}
 
-          <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#0b111c]">
-            <div className="h-full rounded-full bg-slate-300 transition-all duration-500" style={{ width: progressWidth }} />
+          <div className="mt-4 h-1 overflow-hidden rounded-none bg-muted">
+            <div className="h-full rounded-none bg-foreground transition-all duration-500" style={{ width: progressWidth }} />
           </div>
 
-          {generation?.status === "failed" ? <p className="text-sm text-rose-500">{generation.error_message || "Generation failed. Please retry."}</p> : null}
-          {apiError ? <p className="text-sm text-rose-500">{apiError}</p> : null}
+          {generation?.status === "failed" ? <p className="text-sm text-foreground">{generation.error_message || "Generation failed. Please retry."}</p> : null}
+          {apiError ? <p className="text-sm text-foreground">{apiError}</p> : null}
         </div>
 
-        <div className="rounded-3xl border border-white/[0.08] bg-[#050810] p-4">
-          <p className="text-sm font-semibold text-white">Output checklist</p>
-          <div className="mt-3 grid gap-2 text-xs text-slate-400">
+        <div className="rounded-[4px] border border-border/80 bg-transparent p-4">
+          <p className="text-sm font-semibold text-foreground">Output checklist</p>
+          <div className="mt-3 grid gap-2 text-xs text-muted-foreground">
             {["5 app listing frames", "1 promo tile", "1 hero banner", "Quality checks before export"].map((item) => (
               <div key={item} className="flex items-center gap-2">
-                <CheckCircle2 className="size-3.5 text-slate-400" />
+                <CheckCircle2 className="size-3.5 text-foreground" />
                 {item}
               </div>
             ))}
@@ -194,7 +194,7 @@ export function GeneratePanel({ projectId, ready, missing, credits }: { projectI
           </Button>
         ) : null}
         {generation?.status === "failed" && qualityFailures.length > 0 ? (
-          <div className="w-full rounded-2xl border border-rose-400/20 bg-rose-400/10 p-3 text-xs text-rose-200">
+          <div className="w-full rounded-[4px] border border-border/80 bg-transparent p-3 text-xs text-muted-foreground">
             <p className="font-semibold">Quality checks blocked export. Fix these and regenerate:</p>
             <div className="mt-2 space-y-2">
               {Object.entries(groupedFailures)
@@ -203,13 +203,13 @@ export function GeneratePanel({ projectId, ready, missing, credits }: { projectI
                   const [assetType, code] = key.split("::");
                   const first = failures[0];
                   return (
-                    <div key={key} className="rounded-xl border border-rose-300/15 bg-[#090d16] p-2">
+                    <div key={key} className="rounded-[4px] border border-border/80 bg-transparent p-2">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="font-medium text-rose-100">{assetType.replaceAll("_", " ")}</p>
-                        <span className="rounded-full border border-rose-300/20 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-rose-200">{code}</span>
+                        <p className="font-medium text-foreground">{assetType.replaceAll("_", " ")}</p>
+                        <span className="rounded-none border border-border/80 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-muted-foreground">{code}</span>
                       </div>
-                      <p className="mt-1 text-rose-200/90">{first.message}</p>
-                      <a href={fixActionHref(code)} className="mt-1 inline-flex text-cyan-200 underline underline-offset-4">
+                      <p className="mt-1 text-muted-foreground">{first.message}</p>
+                      <a href={fixActionHref(code)} className="mt-1 inline-flex text-foreground underline underline-offset-4">
                         {fixActionLabel(code)}
                       </a>
                     </div>
@@ -219,7 +219,7 @@ export function GeneratePanel({ projectId, ready, missing, credits }: { projectI
           </div>
         ) : null}
         {generation?.status === "completed" && qualityWarnings.length > 0 ? (
-          <div className="w-full rounded-2xl border border-amber-400/20 bg-amber-400/10 p-3 text-xs text-amber-200">
+          <div className="w-full rounded-[4px] border border-border/80 bg-transparent p-3 text-xs text-muted-foreground">
             <p className="font-semibold">Export ready, but quality warnings were detected:</p>
             <div className="mt-2 space-y-2">
               {Object.entries(groupedWarnings)
@@ -228,12 +228,12 @@ export function GeneratePanel({ projectId, ready, missing, credits }: { projectI
                   const [assetType, code] = key.split("::");
                   const first = warnings[0];
                   return (
-                    <div key={key} className="rounded-xl border border-amber-300/20 bg-[#090d16] p-2">
+                    <div key={key} className="rounded-[4px] border border-border/80 bg-transparent p-2">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="font-medium text-amber-100">{assetType.replaceAll("_", " ")}</p>
-                        <span className="rounded-full border border-amber-300/20 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-amber-200">{code}</span>
+                        <p className="font-medium text-foreground">{assetType.replaceAll("_", " ")}</p>
+                        <span className="rounded-none border border-border/80 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-muted-foreground">{code}</span>
                       </div>
-                      <p className="mt-1 text-amber-200/90">{first.message}</p>
+                      <p className="mt-1 text-muted-foreground">{first.message}</p>
                     </div>
                   );
                 })}

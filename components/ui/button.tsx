@@ -4,18 +4,18 @@ import { Slot } from "@radix-ui/react-slot";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-[14px] text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ring-offset-background",
+  "inline-flex items-center justify-center gap-2 rounded-[4px] border border-transparent text-[11px] font-semibold uppercase tracking-[0.18em] transition-opacity duration-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-foreground/20 focus-visible:ring-offset-0 disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
-        default: "bg-[#5b5ff7] text-white shadow-[0_18px_44px_-30px_rgba(91,95,247,0.85)] hover:bg-[#686cf8]",
-        outline: "border border-slate-200 bg-white text-slate-900 hover:border-slate-300 hover:bg-slate-50 dark:border-white/[0.1] dark:bg-[#070b12] dark:text-slate-100 dark:hover:border-white/[0.16] dark:hover:bg-[#0d1320]",
-        ghost: "text-slate-700 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-white"
+        default: "bg-foreground text-background hover:opacity-85",
+        outline: "border-border/80 bg-transparent text-foreground hover:bg-muted/60",
+        ghost: "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
       },
       size: {
         default: "h-11 px-5 py-2.5",
-        lg: "h-12 px-6 text-sm",
-        sm: "h-9 rounded-xl px-3.5 text-[13px]"
+        lg: "h-12 px-6 text-[11px]",
+        sm: "h-9 px-3.5 text-[10px]"
       }
     },
     defaultVariants: { variant: "default", size: "default" }

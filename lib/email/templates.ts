@@ -19,7 +19,7 @@ function escapeHtml(value: string) {
 }
 
 function baseEmail(input: { eyebrow: string; title: string; body: string; ctaLabel?: string; ctaHref?: string; footer?: string }) {
-  const footer = input.footer || "LaunchPix sends operational emails about your projects, generations, billing, and exports.";
+  const footer = input.footer || "Talocode LaunchPix sends operational emails about your projects, generations, billing, and exports.";
 
   return `<!doctype html>
 <html>
@@ -30,7 +30,7 @@ function baseEmail(input: { eyebrow: string; title: string; body: string; ctaLab
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;border:1px solid ${brand.border};border-radius:24px;background:${brand.panel};overflow:hidden;">
             <tr>
               <td style="padding:28px 28px 20px;">
-                <div style="font-size:18px;font-weight:700;letter-spacing:-0.02em;">LaunchPix</div>
+                <div style="font-size:18px;font-weight:700;letter-spacing:-0.02em;">Talocode LaunchPix</div>
                 <div style="margin-top:28px;font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:${brand.muted};">${escapeHtml(input.eyebrow)}</div>
                 <h1 style="margin:12px 0 0;font-size:28px;line-height:1.12;letter-spacing:-0.04em;color:${brand.text};">${escapeHtml(input.title)}</h1>
                 <p style="margin:16px 0 0;font-size:15px;line-height:1.7;color:${brand.muted};">${escapeHtml(input.body)}</p>
@@ -77,17 +77,17 @@ export function renderEmailTemplate(
     generationId?: string;
   } = {}
 ) {
-  const projectName = input.projectName || "your LaunchPix project";
+  const projectName = input.projectName || "your Talocode LaunchPix project";
   const projectUrl = input.projectId ? buildAppUrl(`/dashboard/projects/${input.projectId}`) : buildAppUrl("/dashboard/projects");
   const assetsUrl = input.projectId ? buildAppUrl(`/dashboard/projects/${input.projectId}/assets`) : buildAppUrl("/dashboard/projects");
   const billingUrl = buildAppUrl("/settings/billing");
 
   const map: Record<EmailTemplateName, { subject: string; html: string }> = {
     welcome: {
-      subject: "Welcome to LaunchPix",
+      subject: "Welcome to Talocode LaunchPix",
       html: baseEmail({
         eyebrow: "Welcome",
-        title: "Your LaunchPix workspace is ready.",
+        title: "Your Talocode LaunchPix workspace is ready.",
         body: "Create a project brief, upload screenshots, generate launch visuals, and export the final pack from one focused workspace.",
         ctaLabel: "Open dashboard",
         ctaHref: buildAppUrl("/dashboard")
@@ -98,7 +98,7 @@ export function renderEmailTemplate(
       html: baseEmail({
         eyebrow: "Project created",
         title: `${projectName} is ready for screenshots.`,
-        body: "Upload the product screens you want to turn into launch visuals. LaunchPix will use them to build the final asset story.",
+        body: "Upload the product screens you want to turn into launch visuals. Talocode LaunchPix will use them to build the final asset story.",
         ctaLabel: "Continue project",
         ctaHref: projectUrl
       })
@@ -117,14 +117,14 @@ export function renderEmailTemplate(
       subject: `Generation started for ${projectName}`,
       html: baseEmail({
         eyebrow: "Generation started",
-        title: "LaunchPix is building your asset pack.",
+        title: "Talocode LaunchPix is building your asset pack.",
         body: "We are reading your brief, preparing the copy structure, and rendering the launch visuals.",
         ctaLabel: "View status",
         ctaHref: projectUrl
       })
     },
     generationCompleted: {
-      subject: `Your LaunchPix pack is ready: ${projectName}`,
+      subject: `Your Talocode LaunchPix pack is ready: ${projectName}`,
       html: baseEmail({
         eyebrow: "Pack ready",
         title: "Your launch assets are ready to review.",
@@ -138,13 +138,13 @@ export function renderEmailTemplate(
       html: baseEmail({
         eyebrow: "Generation failed",
         title: "The asset generation did not complete.",
-        body: input.errorMessage || "LaunchPix could not complete the render. Open the project to retry or adjust the inputs.",
+        body: input.errorMessage || "Talocode LaunchPix could not complete the render. Open the project to retry or adjust the inputs.",
         ctaLabel: "Open project",
         ctaHref: projectUrl
       })
     },
     paymentSucceeded: {
-      subject: "LaunchPix payment confirmed",
+      subject: "Talocode LaunchPix payment confirmed",
       html: baseEmail({
         eyebrow: "Payment confirmed",
         title: `${input.planLabel || "Your credit pack"} is active.`,
@@ -158,7 +158,7 @@ export function renderEmailTemplate(
       html: baseEmail({
         eyebrow: "Asset downloaded",
         title: "A launch asset was downloaded.",
-        body: "This confirms an asset was requested from your LaunchPix workspace.",
+        body: "This confirms an asset was requested from your Talocode LaunchPix workspace.",
         ctaLabel: "View project",
         ctaHref: projectUrl
       })
@@ -174,7 +174,7 @@ export function renderEmailTemplate(
       })
     },
     creditsLow: {
-      subject: "LaunchPix credits are low",
+      subject: "Talocode LaunchPix credits are low",
       html: baseEmail({
         eyebrow: "Credits low",
         title: "Add credits to keep generating launch packs.",

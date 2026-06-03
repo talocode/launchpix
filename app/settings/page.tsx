@@ -23,26 +23,26 @@ export default async function SettingsPage() {
         <Card>
           <CardContent className="space-y-6">
             <div className="flex items-start gap-4">
-              <div className="rounded-2xl border border-border/60 bg-background/70 p-3">
-                <Mail className="size-5 text-slate-500 dark:text-slate-300" />
+              <div className="rounded-[4px] border border-border/80 bg-transparent p-3">
+                <Mail className="size-5 text-foreground" />
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Workspace email</p>
-                <p className="mt-2 text-xl font-semibold">{user.email}</p>
+                <p className="mt-2 font-mono text-xl font-light tracking-[-0.04em] text-foreground">{user.email}</p>
                 <p className="mt-2 text-sm leading-7 text-muted-foreground">This address receives account-related updates.</p>
               </div>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="surface-muted p-5">
-                <ShieldCheck className="size-5 text-slate-500 dark:text-slate-300" />
+                <ShieldCheck className="size-5 text-foreground" />
                 <p className="mt-4 font-semibold">Credit balance</p>
                 <p className="mt-2 text-sm leading-7 text-muted-foreground">
                   {plan.label} - {subscription.credits_remaining} credits remaining
                 </p>
               </div>
               <div className="surface-muted p-5">
-                <Sparkles className="size-5 text-slate-500 dark:text-slate-300" />
+                <Sparkles className="size-5 text-foreground" />
                 <p className="mt-4 font-semibold">Export mode</p>
                 <p className="mt-2 text-sm leading-7 text-muted-foreground">
                   {plan.fullResolutionExport ? "Full-resolution export is active while credits remain." : "Export is limited until credits are available."}
@@ -60,11 +60,11 @@ export default async function SettingsPage() {
             </div>
 
             <div className="space-y-3">
-              <Link href="/settings/billing" className="surface-muted flex items-center justify-between gap-4 p-4 text-sm font-medium text-foreground transition hover:border-slate-300 hover:bg-white dark:hover:border-white/[0.14] dark:hover:text-white">
+              <Link href="/settings/billing" className="surface-muted flex items-center justify-between gap-4 p-4 text-sm font-medium text-foreground transition-opacity hover:opacity-80">
                 <span className="flex items-center gap-3"><CreditCard className="size-4" /> Billing and credits</span>
                 <ArrowRight className="size-4" />
               </Link>
-              <Link href="/dashboard/projects" className="surface-muted flex items-center justify-between gap-4 p-4 text-sm font-medium text-foreground transition hover:border-slate-300 hover:bg-white dark:hover:border-white/[0.14] dark:hover:text-white">
+              <Link href="/dashboard/projects" className="surface-muted flex items-center justify-between gap-4 p-4 text-sm font-medium text-foreground transition-opacity hover:opacity-80">
                 <span className="flex items-center gap-3"><Sparkles className="size-4" /> View projects</span>
                 <ArrowRight className="size-4" />
               </Link>

@@ -4,20 +4,20 @@ import { Button } from "@/components/ui/button";
 import { MarketingPageShell } from "@/components/marketing/page-shell";
 
 export const metadata: Metadata = {
-  title: "Contact | LaunchPix",
-  description: "Contact LaunchPix support for product, billing, and account help."
+  title: "Contact | Talocode LaunchPix",
+  description: "Contact Talocode LaunchPix support for product, API, billing, and account help."
 };
 
 const supportTypes = [
   {
     icon: Mail,
     title: "Primary support",
-    text: "support@launchpix.app"
+    text: "support@talocode.com"
   },
   {
     icon: CreditCard,
     title: "Credit or billing issue",
-    text: "Include the account email, Lemon Squeezy checkout reference, credit pack name, and the time of payment."
+    text: "Include the account email, Lemon Squeezy checkout reference, credit top-up name, and the time of payment."
   },
   {
     icon: Sparkles,
@@ -52,7 +52,7 @@ export default function ContactPage() {
         <div className="grid gap-4 lg:grid-cols-3">
           {supportTypes.map((item) => (
             <div key={item.title} className="surface-muted p-6">
-              <item.icon className="size-5 text-primary" />
+              <item.icon className="size-5 text-foreground" />
               <p className="mt-3 font-semibold">{item.title}</p>
               <p className="mt-2 text-sm leading-7 text-muted-foreground">{item.text}</p>
             </div>
@@ -77,7 +77,7 @@ export default function ContactPage() {
           </div>
 
           <Button asChild className="mt-6" size="lg">
-            <a href="mailto:support@launchpix.app">Email support</a>
+            <a href="mailto:support@talocode.com">Email support</a>
           </Button>
         </div>
       </div>

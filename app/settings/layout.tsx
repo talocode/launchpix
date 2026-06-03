@@ -12,7 +12,7 @@ export default async function SettingsLayout({ children }: { children: ReactNode
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground lg:flex-row">
-      <DashboardSidebar credits={subscription.credits_remaining} planLabel={plan.label} userEmail={user.email ?? "user@launchpix.app"} />
+      <DashboardSidebar credits={subscription.credits_remaining} planLabel={plan.label} userEmail={user.email ?? "user@talocode.com"} />
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
         <DashboardTopbar credits={subscription.credits_remaining} planLabel={plan.label} />
         <main className="flex-1 px-4 pb-7 pt-3 sm:px-5 lg:px-6">{children}</main>

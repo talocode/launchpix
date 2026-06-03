@@ -20,7 +20,7 @@ export function ThemeToggle() {
       aria-label="Toggle theme"
       variant="outline"
       size="sm"
-      className="h-9 w-9 rounded-full px-0 sm:w-auto sm:px-3.5"
+      className="h-9 w-9 rounded-[4px] px-0 sm:w-auto sm:px-3.5"
       onClick={() => setTheme(isDark ? "light" : "dark")}
     >
       {isDark ? <Sun className="size-4 sm:mr-2" /> : <Moon className="size-4 sm:mr-2" />}
