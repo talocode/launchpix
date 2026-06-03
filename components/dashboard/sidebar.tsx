@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
-import { ChevronUp, CreditCard, Folder, Gem, Home, ImageIcon, LogOut, Menu, Plus, Settings, UserCircle, Wand2, X } from "lucide-react";
+import { ChevronUp, Code2, CreditCard, Folder, Gem, Home, ImageIcon, LogOut, Menu, Plus, Settings, UserCircle, Wand2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { LaunchPixLogo } from "@/components/brand/logo";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/dashboard", label: "Overview", icon: Home, section: "overview" },
+  { href: "/dashboard/api", label: "API Platform", icon: Code2, section: "api-platform" },
   { href: "/dashboard/projects", label: "Projects", icon: Folder, section: "projects" },
   { href: "/dashboard/projects/new?step=3", label: "Generations", icon: Wand2, section: "generations" },
   { href: "/dashboard/projects", label: "Assets", icon: ImageIcon, section: "assets" },
@@ -27,6 +28,7 @@ function getInitials(email: string) {
 
 function isActive(pathname: string, section: (typeof navItems)[number]["section"]) {
   if (section === "overview") return pathname === "/dashboard";
+  if (section === "api-platform") return pathname.startsWith("/dashboard/api");
   if (section === "projects") return pathname.startsWith("/dashboard/projects") && !pathname.includes("/dashboard/projects/new") && !pathname.endsWith("/assets") && !pathname.endsWith("/generate");
   if (section === "generations") return pathname.endsWith("/generate") || pathname.includes("/dashboard/projects/new");
   if (section === "assets") return pathname.endsWith("/assets");

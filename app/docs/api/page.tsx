@@ -20,9 +20,14 @@ export default function ApiDocsPage() {
 
               <div className="mt-8 flex flex-wrap gap-3">
                 <Button asChild>
+                  <Link href="/dashboard/api">
+                    Open API dashboard
+                    <ArrowRight className="size-4" />
+                  </Link>
+                </Button>
+                <Button asChild variant="outline">
                   <Link href="/contact">
                     Request API key
-                    <ArrowRight className="size-4" />
                   </Link>
                 </Button>
                 <Button asChild variant="outline">
