@@ -5,6 +5,7 @@ import { updateAssetMetadata } from "@/lib/services/assets/edits";
 import { renderAssetPng } from "@/lib/render/pipeline";
 import { generateMistralAssetPng } from "@/lib/ai/mistral-image";
 import { generationPlanSchema, templateFamilySchema } from "@/lib/ai/schemas/asset-plan";
+import { runAssetQualityChecks } from "@/lib/render/quality";
 import { trackEvent } from "@/lib/services/analytics/events";
 
 const ASSET_BUCKET = process.env.STORAGE_BUCKET_ASSETS || "launchpix-assets";
@@ -56,6 +57,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ assetId
   const generation = (asset as any).generations;
   let renderSource: "mistral_image_generation" | "deterministic_template" = "mistral_image_generation";
   let png: Buffer | Uint8Array;
+  let qualityReport = { pass: false, issues: [] as Array<{ code: string; severity: "error" | "warning"; message: string }> };
 
   try {
     const parsedPlan = generationPlanSchema.parse(generation.copy_json);
@@ -63,6 +65,17 @@ export async function POST(req: Request, { params }: { params: Promise<{ assetId
     const uploads = await getGenerationUploads(project.id);
     const screenshotById = new Map(uploads.map((upload: any) => [upload.id, upload.file_url]));
     const screenshotUrls = originalPlanAsset.screenshot_ids.map((id) => screenshotById.get(id)).filter(Boolean) as string[];
+
+    qualityReport = runAssetQualityChecks({
+      assetType: asset.asset_type,
+      templateFamily,
+      headline: String(editable.headline || originalPlanAsset.headline),
+      subheadline: String(editable.subheadline || originalPlanAsset.subheadline),
+      callouts: Array.isArray(editable.callouts) ? editable.callouts.map(String).slice(0, 3) : originalPlanAsset.callouts,
+      cta: "Try Talocode LaunchPix",
+      screenshotUrls,
+      primaryColor: String(editable.primaryColor || project?.primary_color || "#4F46E5")
+    });
 
     png = await generateMistralAssetPng({
       plan: parsedPlan,
@@ -93,6 +106,16 @@ export async function POST(req: Request, { params }: { params: Promise<{ assetId
       screenshotUrls: [],
       primaryColor: String(editable.primaryColor || project?.primary_color || "#4F46E5")
     });
+    qualityReport = runAssetQualityChecks({
+      assetType: asset.asset_type,
+      templateFamily,
+      headline: String(editable.headline || "Launch visuals in minutes"),
+      subheadline: String(editable.subheadline || "Deterministic, conversion-focused design output."),
+      callouts: Array.isArray(editable.callouts) ? editable.callouts.map(String).slice(0, 3) : ["Premium templates", "Reliable exports", "Built for product launches"],
+      cta: "Try Talocode LaunchPix",
+      screenshotUrls: [],
+      primaryColor: String(editable.primaryColor || project?.primary_color || "#4F46E5")
+    });
   }
 
   const path = `${user.id}/rerendered/${asset.generation_id}/${asset.id}.png`;
@@ -110,7 +133,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ assetId
         ...((asset.metadata_json as Record<string, unknown> | null) || {}),
         editable,
         render_source: renderSource,
-        rerendered_at: new Date().toISOString()
+        rerendered_at: new Date().toISOString(),
+        quality_report: qualityReport
       }
     })
     .eq("id", asset.id);
