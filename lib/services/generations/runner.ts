@@ -5,7 +5,7 @@ import { generateMistralAssetPng } from "@/lib/ai/mistral-image";
 import { createDeterministicGenerationPlan } from "@/lib/ai/mistral";
 import { generationPlanSchema } from "@/lib/ai/schemas/asset-plan";
 import { buildDeterministicAssets, renderAssetPng } from "@/lib/render/pipeline";
-import { runAssetQualityChecks } from "@/lib/render/quality";
+import { runAssetQualityChecks, type QualityIssue } from "@/lib/render/quality";
 import type { ProjectRecord, UploadRecord } from "@/types/project";
 import { consumeGenerationCredit, getOrCreateSubscription, refundGenerationCredit } from "@/lib/services/billing/subscription";
 import { PLAN_CONFIG } from "@/lib/services/billing/plans";
@@ -15,10 +15,8 @@ const ASSET_BUCKET = process.env.STORAGE_BUCKET_ASSETS || "launchpix-assets";
 const MISTRAL_ASSET_TIMEOUT_MS = 45_000;
 const MISTRAL_RENDER_ATTEMPTS = 2;
 
-type QualityFailureDetail = {
+type QualityFailureDetail = QualityIssue & {
   asset_type: string;
-  code: string;
-  message: string;
 };
 
 function sleep(ms: number) {
@@ -136,7 +134,8 @@ export async function runGenerationForProject(project: ProjectRecord, uploads: U
         qualityWarnings.push({
           asset_type: asset.asset_type,
           code: issue.code,
-          message: issue.message
+          message: issue.message,
+          severity: issue.severity
         });
       }
 
