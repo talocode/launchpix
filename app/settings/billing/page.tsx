@@ -13,11 +13,11 @@ export default async function BillingPage() {
       <div className="space-y-6">
         <section className="surface overflow-hidden p-6 sm:p-8">
           <p className="eyebrow">Billing</p>
-          <h1 className="section-title mt-4">Buy credits only when your launch balance runs out.</h1>
+          <h1 className="section-title mt-4">Buy usage credits only when your launch balance runs out.</h1>
           <div className="mt-6 grid gap-4 lg:grid-cols-3">
             <div className="surface-muted p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Account type</p>
-              <p className="mt-3 text-2xl font-semibold">{plan.label}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Access type</p>
+              <p className="mt-3 text-2xl font-semibold">API usage</p>
             </div>
             <div className="surface-muted p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Credits remaining</p>
@@ -38,9 +38,9 @@ export default async function BillingPage() {
         <Card>
           <CardContent className="space-y-5">
             <div>
-              <h2 className="text-2xl font-semibold">Top up credit balance</h2>
+              <h2 className="text-2xl font-semibold">Top up usage credits</h2>
               <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                Every user starts with 300 credits. After those are used, buy a one-time credit pack that matches your next launch workload.
+                Every user starts with 300 credits. After those are used, buy a one-time credit top-up that matches your next launch workload.
               </p>
             </div>
             <BillingActions />
@@ -49,7 +49,7 @@ export default async function BillingPage() {
 
         <Card>
           <CardContent className="text-sm leading-7 text-muted-foreground">
-            Credits unlock the full LaunchPix workflow: asset generation, full-resolution PNG downloads, ZIP exports, and commercial use. There is no monthly subscription to manage.
+            Credits unlock the full Talocode LaunchPix API workflow: asset generation, full-resolution PNG downloads, ZIP exports, and commercial use. There is no monthly subscription to manage.
           </CardContent>
         </Card>
       </div>

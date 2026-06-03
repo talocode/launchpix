@@ -69,9 +69,9 @@ export async function createCreditCheckout(input: {
         attributes: {
           product_options: {
             name: pack.label,
-            description: `${pack.creditsGranted} LaunchPix credits`,
+            description: `${pack.creditsGranted} Talocode LaunchPix credits`,
             redirect_url: input.callbackUrl,
-            receipt_button_text: "Return to LaunchPix",
+            receipt_button_text: "Return to Talocode LaunchPix",
             receipt_link_url: input.callbackUrl,
             enabled_variants: [Number(variantId)]
           },

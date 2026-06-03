@@ -6,29 +6,27 @@ import { Card, CardContent } from "@/components/ui/card";
 import { MarketingPageShell } from "@/components/marketing/page-shell";
 import { CREDIT_PACKS, FREE_SIGNUP_CREDITS } from "@/lib/services/billing/plans";
 
-const plans = [
-  {
-    id: "included",
-    name: "Included credits",
-    price: "NGN 0",
-    desc: "Every new account gets enough credits to build real launch assets before paying.",
-    tag: "Free grant",
-    features: [`${FREE_SIGNUP_CREDITS} credits on signup`, "Full-resolution PNG exports", "ZIP downloads included"]
-  }
-];
+const includedCredits = {
+  id: "included",
+  name: "Included credits",
+  price: "NGN 0",
+  desc: "Every new account gets enough credits to build real launch assets before paying.",
+  tag: "Free grant",
+  features: [`${FREE_SIGNUP_CREDITS} credits on signup`, "Full-resolution PNG exports", "ZIP downloads included"]
+};
 
 export const metadata: Metadata = {
-  title: "Pricing | LaunchPix",
-  description: "LaunchPix uses one-time credits instead of subscriptions. Start with 300 included credits, then top up when needed.",
+  title: "Credits | Talocode LaunchPix",
+  description: "Talocode LaunchPix uses one-time usage credits instead of subscriptions. Start with included credits, then top up when needed.",
   openGraph: {
-    title: "LaunchPix Pricing",
-    description: "Start with 300 included credits, then buy one-time credit packs when needed.",
-    url: "https://launchpix.app/pricing"
+    title: "Talocode LaunchPix Credits",
+    description: "Start with included credits, then buy one-time credit top-ups when needed.",
+    url: "https://launchpix.talocode.com/pricing"
   },
   twitter: {
     card: "summary_large_image",
-    title: "LaunchPix Pricing",
-    description: "Simple credit packs for launch asset generation."
+    title: "Talocode LaunchPix Credits",
+    description: "Simple usage credits for launch asset generation."
   }
 };
 
@@ -37,51 +35,52 @@ export default function PricingPage() {
     <MarketingPageShell
       eyebrow="Pricing"
       title="Start with 300 credits. Top up only when you need more."
-      description="LaunchPix is now credit based: no monthly subscription, no plan lock-in, and no upgrade prompt until your included credits are exhausted."
+      description="Talocode LaunchPix is API usage based: no monthly subscription, no plan lock-in, and no paid top-up prompt until your included credits are exhausted."
     >
       <div className="grid gap-5 xl:grid-cols-4">
-        {plans.map((plan) => (
-          <Card key={plan.id}>
-            <CardContent className="flex h-full flex-col gap-5">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">{plan.tag}</p>
-                <h2 className="mt-3 text-2xl font-semibold">{plan.name}</h2>
-                <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-950 dark:text-white">{plan.price}</p>
-                <p className="mt-3 text-sm leading-7 text-muted-foreground">{plan.desc}</p>
-              </div>
+        <Card>
+          <CardContent className="flex h-full flex-col gap-5">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">{includedCredits.tag}</p>
+              <h2 className="mt-3 text-2xl font-semibold">{includedCredits.name}</h2>
+              <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-950 dark:text-white">{includedCredits.price}</p>
+              <p className="mt-3 text-sm leading-7 text-muted-foreground">{includedCredits.desc}</p>
+            </div>
 
-              <div className="space-y-3 text-sm">
-                {plan.features.map((feature) => (
-                  <div key={feature} className="flex items-start gap-3">
-                    <CheckCircle2 className="mt-0.5 size-4 text-cyan-300" />
-                    <span className="text-muted-foreground">{feature}</span>
-                  </div>
-                ))}
-              </div>
+            <div className="space-y-3 text-sm">
+              {includedCredits.features.map((feature) => (
+                <div key={feature} className="flex items-start gap-3">
+                  <CheckCircle2 className="mt-0.5 size-4 text-slate-900 dark:text-white" />
+                  <span className="text-muted-foreground">{feature}</span>
+                </div>
+              ))}
+            </div>
 
-              <Button asChild className="mt-auto w-full">
-                <Link href="/dashboard/projects/new">
-                  Start with included credits
-                  <ArrowRight className="size-4" />
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
+            <Button asChild className="mt-auto w-full">
+              <Link href="/dashboard/projects/new">
+                Start with included credits
+                <ArrowRight className="size-4" />
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+
         {CREDIT_PACKS.map((pack) => (
-          <Card key={pack.id} className={pack.featured ? "border-cyan-300/30 shadow-[0_24px_60px_rgba(34,211,238,0.12)]" : undefined}>
+          <Card key={pack.id} className={pack.featured ? "border-border/80 shadow-none" : undefined}>
             <CardContent className="flex h-full flex-col gap-5">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">{pack.featured ? "Popular" : "Top up"}</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">{pack.featured ? "Most used" : "Top up"}</p>
                 <h2 className="mt-3 text-2xl font-semibold">{pack.label}</h2>
                 <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-950 dark:text-white">{pack.creditsGranted.toLocaleString()} credits</p>
-                <p className="mt-3 text-sm leading-7 text-muted-foreground">{pack.description}</p>
+                <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                  {pack.priceLabel} - {pack.description}
+                </p>
               </div>
 
               <div className="space-y-3 text-sm">
                 {["One-time purchase", "Full-resolution PNG + ZIP", "Commercial use included"].map((feature) => (
                   <div key={feature} className="flex items-start gap-3">
-                    <CheckCircle2 className="mt-0.5 size-4 text-cyan-300" />
+                    <CheckCircle2 className="mt-0.5 size-4 text-slate-900 dark:text-white" />
                     <span className="text-muted-foreground">{feature}</span>
                   </div>
                 ))}
@@ -102,11 +101,11 @@ export default function PricingPage() {
         {[
           {
             title: "How credits work",
-            text: "One generation run uses one credit, so your spend follows actual launch work instead of seats or recurring plans."
+            text: "One generation run uses one credit, so your spend follows actual API usage instead of seats or recurring plans."
           },
           {
-            title: "Real free runway",
-            text: "Every account starts with 300 credits, including existing users after the migration is applied."
+            title: "Developer friendly",
+            text: "Build against the LaunchPix API with `LAUNCHPIX_API_KEY` and keep your own product workflow in control."
           },
           {
             title: "Export readiness",

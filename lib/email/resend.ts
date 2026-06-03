@@ -3,7 +3,7 @@ import { renderEmailTemplate, type EmailTemplateName } from "@/lib/email/templat
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-const DEFAULT_FROM = "LaunchPix <onboarding@resend.dev>";
+const DEFAULT_FROM = "Talocode LaunchPix <onboarding@resend.dev>";
 
 let resendClient: Resend | null = null;
 

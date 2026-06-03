@@ -15,14 +15,14 @@ import { saveStyleDirection, upsertProjectIdentity } from "@/lib/actions/project
 
 const labels: Record<string, string> = {
   browser_extension: "Browser Extension",
-  saas: "SaaS",
+  saas: "Web App",
   web_app: "Web App",
   mobile_app: "Mobile App",
   other: "Other",
   chrome_web_store: "Chrome Web Store",
   firefox_addons: "Firefox Add-ons",
   product_launch: "Product Launch",
-  saas_marketing: "SaaS Marketing",
+  saas_marketing: "Product Marketing",
   general_promo: "General Promo",
   minimal: "Minimal",
   bold: "Bold",
@@ -119,7 +119,7 @@ export function NewProjectWizard({ initialStep, project, initialUploads }: { ini
                   <p className="eyebrow">Step 1</p>
                   <h2 className="mt-4 text-2xl font-semibold">Define the product identity once.</h2>
                   <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground">
-                    Tell LaunchPix what you are shipping, who it is for, and the visual posture you want across the asset pack.
+                    Tell Talocode LaunchPix what you are shipping, who it is for, and the visual posture you want across the asset pack.
                   </p>
                 </div>
 
@@ -128,7 +128,7 @@ export function NewProjectWizard({ initialStep, project, initialUploads }: { ini
 
                   <label className="grid gap-2 text-sm font-medium">
                     Project name
-                    <input name="name" required defaultValue={project?.name ?? ""} className="field h-11" placeholder="LaunchPix Chrome Store launch" />
+                    <input name="name" required defaultValue={project?.name ?? ""} className="field h-11" placeholder="Talocode launch pack" />
                   </label>
 
                   <label className="grid gap-2 text-sm font-medium">
@@ -157,7 +157,7 @@ export function NewProjectWizard({ initialStep, project, initialUploads }: { ini
 
                   <label className="grid gap-2 text-sm font-medium">
                     Website URL (optional)
-                    <input name="websiteUrl" defaultValue={project?.website_url ?? ""} className="field h-11" placeholder="launchpix.app" />
+                    <input name="websiteUrl" defaultValue={project?.website_url ?? ""} className="field h-11" placeholder="talocode.com" />
                   </label>
 
                   <label className="grid gap-2 text-sm font-medium">
@@ -201,7 +201,7 @@ export function NewProjectWizard({ initialStep, project, initialUploads }: { ini
                 }
               ].map((item) => (
                 <div key={item.title} className="surface-muted p-5">
-                  <item.icon className="size-5 text-primary" />
+                  <item.icon className="size-5 text-foreground" />
                   <p className="mt-4 font-semibold">{item.title}</p>
                   <p className="mt-2 text-sm leading-7 text-muted-foreground">{item.text}</p>
                 </div>
@@ -226,7 +226,7 @@ export function NewProjectWizard({ initialStep, project, initialUploads }: { ini
 
               <button
                 type="button"
-                className="surface-muted flex min-h-48 w-full cursor-pointer flex-col items-center justify-center rounded-[28px] border border-dashed border-border/70 px-6 text-center transition hover:border-primary/40"
+                className="surface-muted flex min-h-48 w-full cursor-pointer flex-col items-center justify-center rounded-[4px] border border-dashed border-border/80 px-6 text-center transition-opacity hover:opacity-80"
                 onClick={() => fileInputRef.current?.click()}
                 onDragOver={(event) => event.preventDefault()}
                 onDrop={(event) => {
@@ -234,7 +234,7 @@ export function NewProjectWizard({ initialStep, project, initialUploads }: { ini
                   void uploadFiles(event.dataTransfer.files);
                 }}
               >
-                <UploadCloud className="size-10 text-primary" />
+                <UploadCloud className="size-10 text-foreground" />
                 <p className="mt-5 text-lg font-semibold">Drop files here or click to browse</p>
                 <p className="mt-2 text-sm leading-7 text-muted-foreground">PNG, JPG, or WEBP up to 10MB each</p>
                 <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp" multiple className="hidden" onChange={(event) => void uploadFiles(event.target.files)} />
@@ -242,7 +242,7 @@ export function NewProjectWizard({ initialStep, project, initialUploads }: { ini
 
               {progress > 0 ? (
                 <div className="h-2 overflow-hidden rounded-full bg-muted">
-                  <div className="h-2 rounded-full bg-primary transition-all" style={{ width: `${progress}%` }} />
+                  <div className="h-2 rounded-none bg-foreground transition-all" style={{ width: `${progress}%` }} />
                 </div>
               ) : null}
 
@@ -306,7 +306,7 @@ export function NewProjectWizard({ initialStep, project, initialUploads }: { ini
 
             <div className="space-y-4">
               <div className="surface-muted p-5">
-                <Palette className="size-5 text-primary" />
+                <Palette className="size-5 text-foreground" />
                 <p className="mt-4 font-semibold">Direction snapshot</p>
                 <p className="mt-2 text-sm leading-7 text-muted-foreground">
                   Current preset: <span className="font-medium text-foreground">{selectedStyle}</span>
@@ -314,17 +314,17 @@ export function NewProjectWizard({ initialStep, project, initialUploads }: { ini
               </div>
 
               <div className="surface-muted p-5">
-                <ImagePlus className="size-5 text-primary" />
+                <ImagePlus className="size-5 text-foreground" />
                 <p className="mt-4 font-semibold">Output pack preview</p>
                 <ul className="mt-3 space-y-2 text-sm leading-7 text-muted-foreground">
-                  <li>5 main screenshots at 1280 × 800</li>
-                  <li>1 promo tile at 440 × 280</li>
-                  <li>1 hero banner at 1400 × 560</li>
+                  <li>5 main screenshots at 1280 x 800</li>
+                  <li>1 promo tile at 440 x 280</li>
+                  <li>1 hero banner at 1400 x 560</li>
                 </ul>
               </div>
 
               <div className="surface-muted p-5">
-                <Sparkles className="size-5 text-primary" />
+                <Sparkles className="size-5 text-foreground" />
                 <p className="mt-4 font-semibold">What happens next</p>
                 <p className="mt-2 text-sm leading-7 text-muted-foreground">
                   After this step, your project becomes generation-ready and you can move straight into the asset build flow.

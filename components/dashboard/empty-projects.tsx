@@ -22,7 +22,7 @@ export function EmptyProjectsState() {
                 </Link>
               </Button>
               <Button asChild variant="outline">
-                <Link href="/pricing">Compare plans</Link>
+                <Link href="/pricing">Compare credits</Link>
               </Button>
             </div>
           </div>

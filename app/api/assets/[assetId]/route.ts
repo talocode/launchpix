@@ -89,7 +89,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ assetId
       headline: String(editable.headline || "Launch visuals in minutes"),
       subheadline: String(editable.subheadline || "Deterministic, conversion-focused design output."),
       callouts: Array.isArray(editable.callouts) ? editable.callouts.map(String).slice(0, 3) : ["Premium templates", "Reliable exports", "Built for product launches"],
-      cta: "Try LaunchPix",
+      cta: "Try Talocode LaunchPix",
       screenshotUrls: [],
       primaryColor: String(editable.primaryColor || project?.primary_color || "#4F46E5")
     });

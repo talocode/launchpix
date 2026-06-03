@@ -8,14 +8,14 @@ import { listUserProjects } from "@/lib/services/projects/queries";
 
 const textMap: Record<string, string> = {
   browser_extension: "Browser Extension",
-  saas: "SaaS",
+  saas: "Web App",
   web_app: "Web App",
   mobile_app: "Mobile App",
   other: "Other",
   chrome_web_store: "Chrome Web Store",
   firefox_addons: "Firefox Add-ons",
   product_launch: "Product Launch",
-  saas_marketing: "SaaS Marketing",
+  saas_marketing: "Product Marketing",
   general_promo: "General Promo"
 };
 
@@ -48,7 +48,7 @@ export default async function ProjectsPage() {
               </Link>
             </Button>
             <Button asChild variant="outline">
-              <Link href="/settings/billing">Manage plan</Link>
+              <Link href="/settings/billing">Manage credits</Link>
             </Button>
           </div>
         </div>

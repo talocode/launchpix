@@ -60,15 +60,15 @@ export function BillingActions() {
           <div>
             <p className="text-base font-semibold">{pack.label}</p>
             <p className="mt-2 text-3xl font-semibold">{pack.creditsGranted.toLocaleString()} credits</p>
-            <p className="mt-2 text-sm leading-7 text-muted-foreground">{pack.description}</p>
+            <p className="mt-2 text-sm leading-7 text-muted-foreground">{pack.priceLabel} · {pack.description}</p>
           </div>
           <Button variant={pack.featured ? "default" : "outline"} disabled={loading !== null} onClick={() => checkout(pack.id)}>
-            {loading === pack.id ? "Redirecting..." : `Buy ${pack.label}`}
+            {loading === pack.id ? "Redirecting..." : `Top up ${pack.label}`}
           </Button>
         </div>
       ))}
 
-      {error ? <p className="lg:col-span-3 text-sm text-rose-500">{error}</p> : <p className="lg:col-span-3 text-sm text-muted-foreground">Secure one-time checkout via Lemon Squeezy. Credits are added after payment confirmation.</p>}
+      {error ? <p className="lg:col-span-3 text-sm text-foreground">{error}</p> : <p className="lg:col-span-3 text-sm text-muted-foreground">Secure one-time checkout via Lemon Squeezy. Credits are added after payment confirmation.</p>}
     </div>
   );
 }

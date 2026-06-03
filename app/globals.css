@@ -4,30 +4,30 @@
 
 :root {
   --background: 0 0% 100%;
-  --foreground: 222 45% 7%;
+  --foreground: 0 0% 8%;
   --card: 0 0% 100%;
-  --card-foreground: 222 45% 7%;
-  --muted: 220 24% 96%;
-  --muted-foreground: 220 10% 42%;
-  --border: 220 18% 88%;
-  --primary: 252 74% 58%;
+  --card-foreground: 0 0% 8%;
+  --muted: 0 0% 97%;
+  --muted-foreground: 0 0% 38%;
+  --border: 0 0% 88%;
+  --primary: 0 0% 8%;
   --primary-foreground: 0 0% 100%;
-  --accent: 214 70% 56%;
-  --ring: 252 74% 58%;
+  --accent: 0 0% 14%;
+  --ring: 0 0% 8%;
 }
 
 .dark {
-  --background: 222 58% 3%;
-  --foreground: 218 42% 97%;
-  --card: 222 36% 6%;
-  --card-foreground: 218 42% 97%;
-  --muted: 222 28% 10%;
-  --muted-foreground: 219 18% 68%;
-  --border: 222 20% 16%;
-  --primary: 252 74% 58%;
-  --primary-foreground: 0 0% 100%;
-  --accent: 214 70% 56%;
-  --ring: 252 74% 58%;
+  --background: 220 12% 13%;
+  --foreground: 0 0% 100%;
+  --card: 220 12% 15%;
+  --card-foreground: 0 0% 100%;
+  --muted: 220 10% 18%;
+  --muted-foreground: 0 0% 72%;
+  --border: 0 0% 100% / 0.1;
+  --primary: 0 0% 92%;
+  --primary-foreground: 220 12% 10%;
+  --accent: 0 0% 100%;
+  --ring: 0 0% 100%;
 }
 
 * {
@@ -41,6 +41,7 @@ html {
 body {
   @apply bg-background text-foreground antialiased;
   background-color: hsl(var(--background));
+  background-image: none;
 }
 
 ::selection {
@@ -62,11 +63,11 @@ body {
 
 @layer components {
   .surface {
-    @apply rounded-[24px] border border-slate-200 bg-white shadow-[0_28px_80px_-58px_rgba(15,23,42,0.3)] dark:border-white/[0.08] dark:bg-[#070b12] dark:shadow-[0_28px_80px_-58px_rgba(0,0,0,0.9)];
+    @apply rounded-[6px] border border-border/80 bg-card shadow-none;
   }
 
   .surface-muted {
-    @apply rounded-[20px] border border-slate-200 bg-slate-50 dark:border-white/[0.07] dark:bg-[#0b111c];
+    @apply rounded-[6px] border border-border/80 bg-muted/60 shadow-none;
   }
 
   .app-shell {
@@ -78,31 +79,31 @@ body {
   }
 
   .eyebrow {
-    @apply inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-600 dark:border-white/[0.1] dark:bg-white/[0.04] dark:text-slate-300;
+    @apply inline-flex items-center rounded-none border border-border/80 bg-transparent px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground;
   }
 
   .hero-title {
-    @apply text-4xl font-semibold leading-[0.95] sm:text-5xl lg:text-6xl;
+    @apply font-mono text-4xl font-light leading-[0.95] tracking-[-0.05em] sm:text-5xl lg:text-6xl;
   }
 
   .section-title {
-    @apply text-2xl font-semibold leading-tight sm:text-3xl;
+    @apply font-mono text-2xl font-light leading-tight tracking-[-0.04em] sm:text-3xl;
   }
 
   .section-copy {
-    @apply text-sm leading-7 text-slate-600 sm:text-base sm:leading-8 dark:text-slate-400;
+    @apply text-sm leading-7 text-muted-foreground sm:text-base sm:leading-8;
   }
 
   .field {
-    @apply h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-foreground outline-none transition placeholder:text-slate-400 focus:border-primary/60 focus:ring-4 focus:ring-primary/10 dark:border-white/[0.09] dark:bg-[#0b111c] dark:placeholder:text-slate-500;
+    @apply h-12 w-full rounded-[4px] border border-border/80 bg-background px-4 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-foreground/40 focus:ring-0;
   }
 
   .field-textarea {
-    @apply min-h-28 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-foreground outline-none transition placeholder:text-slate-400 focus:border-primary/60 focus:ring-4 focus:ring-primary/10 dark:border-white/[0.09] dark:bg-[#0b111c] dark:placeholder:text-slate-500;
+    @apply min-h-28 w-full rounded-[4px] border border-border/80 bg-background px-4 py-3 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-foreground/40 focus:ring-0;
   }
 
   .field-select {
-    @apply h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-foreground outline-none transition focus:border-primary/60 focus:ring-4 focus:ring-primary/10 dark:border-white/[0.09] dark:bg-[#0b111c];
+    @apply h-12 w-full rounded-[4px] border border-border/80 bg-background px-4 text-sm text-foreground outline-none transition focus:border-foreground/40 focus:ring-0;
   }
 
   .legal-copy {
@@ -114,18 +115,18 @@ body {
   }
 
   .dashboard-page {
-    @apply mx-auto w-full max-w-[1420px] space-y-6;
+    @apply mx-auto w-full max-w-[1360px] space-y-6;
   }
 
   .dashboard-card {
-    @apply rounded-[22px] border border-slate-200 bg-white shadow-[0_24px_72px_-56px_rgba(15,23,42,0.35)] dark:border-white/[0.08] dark:bg-[#070b12] dark:shadow-[0_24px_72px_-56px_rgba(0,0,0,0.9)];
+    @apply rounded-[6px] border border-border/80 bg-card shadow-none;
   }
 
   .dashboard-card-muted {
-    @apply rounded-[18px] border border-slate-200 bg-slate-50 dark:border-white/[0.07] dark:bg-[#0b111c];
+    @apply rounded-[4px] border border-border/80 bg-muted/55 shadow-none;
   }
 
   .dashboard-label {
-    @apply text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400;
+    @apply text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground;
   }
 }
