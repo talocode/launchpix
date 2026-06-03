@@ -1,0 +1,34 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1600" height="900" fill="#020202"/>
+  <g opacity="0.16">
+    <circle cx="800" cy="450" r="360" stroke="white" stroke-width="1"/>
+    <circle cx="800" cy="450" r="280" stroke="white" stroke-width="1"/>
+    <circle cx="800" cy="450" r="200" stroke="white" stroke-width="1"/>
+  </g>
+  <g opacity="0.18">
+    <circle cx="120" cy="120" r="2.5" fill="white"/>
+    <circle cx="164" cy="120" r="2.5" fill="white"/>
+    <circle cx="208" cy="120" r="2.5" fill="white"/>
+    <circle cx="1256" cy="120" r="2.5" fill="white"/>
+    <circle cx="1300" cy="120" r="2.5" fill="white"/>
+    <circle cx="1344" cy="120" r="2.5" fill="white"/>
+    <circle cx="120" cy="176" r="2.5" fill="white"/>
+    <circle cx="164" cy="176" r="2.5" fill="white"/>
+    <circle cx="208" cy="176" r="2.5" fill="white"/>
+    <circle cx="1256" cy="176" r="2.5" fill="white"/>
+    <circle cx="1300" cy="176" r="2.5" fill="white"/>
+    <circle cx="1344" cy="176" r="2.5" fill="white"/>
+  </g>
+  <g opacity="0.92">
+    <path d="M420 300L336 384L420 468" stroke="white" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M520 300L604 384L520 468" stroke="white" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="640" y="404" fill="white" font-size="118" font-weight="700" font-family="Inter, Arial, sans-serif">Talocode</text>
+    <text x="454" y="520" fill="white" font-size="44" font-weight="500" font-family="Inter, Arial, sans-serif">Open-source AI tools for builders.</text>
+  </g>
+  <g opacity="0.82">
+    <text x="406" y="664" fill="white" font-size="28" font-weight="500" font-family="Inter, Arial, sans-serif">Creators</text>
+    <text x="586" y="664" fill="white" font-size="28" font-weight="500" font-family="Inter, Arial, sans-serif">Founders</text>
+    <text x="770" y="664" fill="white" font-size="28" font-weight="500" font-family="Inter, Arial, sans-serif">Engineers</text>
+    <text x="956" y="664" fill="white" font-size="28" font-weight="500" font-family="Inter, Arial, sans-serif">Businesses</text>
+  </g>
+</svg>

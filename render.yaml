@@ -1,0 +1,61 @@
+services:
+  - type: web
+    name: talocode-launchpix
+    runtime: node
+    plan: starter
+    rootDir: .
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
+      - key: NEXT_PUBLIC_APP_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: NEXTAUTH_SECRET
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: MISTRAL_API_KEY
+        sync: false
+      - key: MISTRAL_MODEL_TEXT
+        sync: false
+      - key: MISTRAL_MODEL_VISION
+        sync: false
+      - key: MISTRAL_IMAGE_MODEL
+        sync: false
+      - key: MISTRAL_IMAGE_AGENT_ID
+        sync: false
+      - key: LAUNCHPIX_API_KEY
+        sync: false
+      - key: LEMON_SQUEEZY_API_KEY
+        sync: false
+      - key: LEMON_SQUEEZY_STORE_ID
+        sync: false
+      - key: LEMON_SQUEEZY_WEBHOOK_SECRET
+        sync: false
+      - key: LEMON_SQUEEZY_STARTER_CREDITS_VARIANT_ID
+        sync: false
+      - key: LEMON_SQUEEZY_CREATOR_CREDITS_VARIANT_ID
+        sync: false
+      - key: LEMON_SQUEEZY_STUDIO_CREDITS_VARIANT_ID
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM_EMAIL
+        sync: false
+      - key: RESEND_WEBHOOK_SECRET
+        sync: false

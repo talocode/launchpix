@@ -15,6 +15,12 @@ const ASSET_BUCKET = process.env.STORAGE_BUCKET_ASSETS || "launchpix-assets";
 const MISTRAL_ASSET_TIMEOUT_MS = 45_000;
 const MISTRAL_RENDER_ATTEMPTS = 2;
 
+type QualityFailureDetail = {
+  asset_type: string;
+  code: string;
+  message: string;
+};
+
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -101,6 +107,7 @@ export async function runGenerationForProject(project: ProjectRecord, uploads: U
     const zip = new JSZip();
     const renderSources: Record<string, number> = {};
     const qualityFailures: Array<{ assetType: string; issues: string[] }> = [];
+    const qualityWarnings: QualityFailureDetail[] = [];
 
     for (const [index, asset] of deterministicAssets.entries()) {
       let renderSource: "mistral_image_generation" | "deterministic_template" = "mistral_image_generation";
@@ -123,6 +130,14 @@ export async function runGenerationForProject(project: ProjectRecord, uploads: U
           issues: qualityReport.issues.filter((issue) => issue.severity === "error").map((issue) => issue.message)
         });
         continue;
+      }
+
+      for (const issue of qualityReport.issues.filter((item) => item.severity === "warning")) {
+        qualityWarnings.push({
+          asset_type: asset.asset_type,
+          code: issue.code,
+          message: issue.message
+        });
       }
 
       try {
@@ -203,8 +218,27 @@ export async function runGenerationForProject(project: ProjectRecord, uploads: U
     await supabase.storage.from(ASSET_BUCKET).upload(zipPath, zipBuffer, { contentType: "application/zip", upsert: true });
     const { data: zipUrl } = supabase.storage.from(ASSET_BUCKET).getPublicUrl(zipPath);
 
-    await supabase.from("generations").update({ status: "completed", style_json: { ...safePlan, zip_url: zipUrl.publicUrl, render_sources: renderSources } }).eq("id", generation.id);
+    await supabase
+      .from("generations")
+      .update({
+        status: "completed",
+        style_json: { ...safePlan, zip_url: zipUrl.publicUrl, render_sources: renderSources, quality_warnings: qualityWarnings }
+      })
+      .eq("id", generation.id);
     await supabase.from("projects").update({ status: "completed" }).eq("id", project.id);
+    if (qualityWarnings.length) {
+      await trackEvent({
+        userId: project.user_id,
+        projectId: project.id,
+        eventType: "quality_warning",
+        metadata: {
+          generationId: generation.id,
+          projectName: project.name,
+          warning_codes: qualityWarnings.map((item) => item.code),
+          warning_assets: qualityWarnings.map((item) => item.asset_type)
+        }
+      });
+    }
     await trackEvent({
       userId: project.user_id,
       projectId: project.id,

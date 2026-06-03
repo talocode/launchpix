@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Download, FileArchive, ImageIcon, PencilLine, RefreshCw, Sparkles } from "lucide-react";
+import { AlertTriangle, Download, FileArchive, ImageIcon, PencilLine, RefreshCw, Sparkles } from "lucide-react";
 import type { AssetRecord, GenerationRecord } from "@/types/project";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -68,6 +68,14 @@ export function AssetsManager({
 
   const heroAsset = assets.find((asset) => asset.asset_type.includes("hero")) ?? assets[0];
   const listingAssets = assets.filter((asset) => asset.asset_type.includes("listing"));
+
+  function warningMessages(asset: AssetRecord) {
+    const metadata = asset.metadata_json as { quality_report?: { issues?: Array<{ severity?: string; message?: string }> } } | null;
+    const issues = metadata?.quality_report?.issues || [];
+    return issues
+      .filter((issue) => issue.severity === "warning" && typeof issue.message === "string")
+      .map((issue) => issue.message as string);
+  }
 
   return (
     <div className="space-y-6">
@@ -179,6 +187,19 @@ export function AssetsManager({
                     <Sparkles className="size-3.5" />
                     {(asset.metadata_json as { render_source?: string } | null)?.render_source === "mistral_image_generation" ? "Mistral image generated" : "Template fallback"}
                   </p>
+                  {warningMessages(asset).length ? (
+                    <div className="mt-3 rounded-xl border border-amber-400/20 bg-amber-400/10 p-2.5">
+                      <p className="inline-flex items-center gap-2 text-xs font-semibold text-amber-300">
+                        <AlertTriangle className="size-3.5" />
+                        Quality warnings
+                      </p>
+                      <div className="mt-1 space-y-1 text-xs text-amber-200/90">
+                        {warningMessages(asset).map((message, index) => (
+                          <p key={`${asset.id}-warning-${index}`}>{message}</p>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
 
                 <div className="grid gap-2 sm:grid-cols-3">
