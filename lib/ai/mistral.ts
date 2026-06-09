@@ -1,14 +1,10 @@
 import { Mistral } from "@mistralai/mistralai";
 import { generationPlanSchema, type GenerationPlan } from "@/lib/ai/schemas/asset-plan";
 import { buildGenerationPrompt } from "@/lib/ai/prompts/generation";
+import { logGenerationError, logGenerationEvent } from "@/lib/services/generations/logging";
 
 const visionModel = process.env.MISTRAL_MODEL_VISION || "mistral-small-2506";
 const textModel = process.env.MISTRAL_MODEL_TEXT || "mistral-small-2506";
-
-function redactError(error: unknown) {
-  const message = error instanceof Error ? error.message : String(error);
-  return message.replaceAll(process.env.MISTRAL_API_KEY || "", "[redacted]");
-}
 
 function compactText(value: string, maxLength: number) {
   return value.replace(/\s+/g, " ").trim().slice(0, maxLength);
@@ -129,7 +125,12 @@ export async function mistralGenerateAssetPlan(input: {
   uploads: Array<{ id: string; file_url: string; position: number }>;
 }): Promise<GenerationPlan> {
   if (!process.env.MISTRAL_API_KEY) {
-    console.warn("MISTRAL_API_KEY is missing. Using deterministic fallback generation plan.");
+    logGenerationEvent("warn", "mistral_plan_fallback", {
+      reason: "missing_api_key",
+      project: input.project.name,
+      platform: input.project.platform,
+      uploadCount: input.uploads.length
+    });
     return createDeterministicGenerationPlan(input);
   }
 
@@ -147,6 +148,13 @@ export async function mistralGenerateAssetPlan(input: {
   });
 
   try {
+    logGenerationEvent("info", "mistral_plan_request_started", {
+      model: textModel,
+      project: input.project.name,
+      platform: input.project.platform,
+      uploadCount: input.uploads.length
+    });
+
     const response = await client.chat.complete({
       model: textModel,
       responseFormat: { type: "json_object" },
@@ -164,9 +172,19 @@ export async function mistralGenerateAssetPlan(input: {
 
     const raw = response.choices?.[0]?.message?.content;
     const text = Array.isArray(raw) ? raw.map((item: any) => (item.type === "text" ? item.text : "")).join(" ") : String(raw || "{}");
+    logGenerationEvent("info", "mistral_plan_request_completed", {
+      model: textModel,
+      project: input.project.name,
+      uploadCount: input.uploads.length
+    });
     return generationPlanSchema.parse(normalizeMistralPlanPayload(parseJsonObject(text)));
   } catch (error) {
-    console.error("Mistral generation failed; using fallback plan:", redactError(error));
+    logGenerationError("mistral_plan_failed_fallback", error, {
+      model: textModel,
+      project: input.project.name,
+      platform: input.project.platform,
+      uploadCount: input.uploads.length
+    });
     return createDeterministicGenerationPlan(input);
   }
 }
