@@ -77,6 +77,13 @@ export function AssetsManager({
       .map((issue) => issue.message as string);
   }
 
+  function renderSourceLabel(asset: AssetRecord) {
+    const renderSource = (asset.metadata_json as { render_source?: string } | null)?.render_source;
+    if (renderSource === "mistral_image_generation") return "Mistral image generated";
+    if (renderSource === "deterministic_template") return "Deterministic fallback";
+    return "Generated asset";
+  }
+
   return (
     <div className="space-y-6">
       {!canDownloadFull ? (
@@ -185,11 +192,24 @@ export function AssetsManager({
                 <img src={asset.preview_url || asset.file_url} alt={assetLabel(asset.asset_type)} className="aspect-[16/10] w-full rounded-[4px] border border-border/80 bg-card object-cover" />
 
                 <div>
-                  <h3 className="text-base font-semibold text-foreground">{assetLabel(asset.asset_type)}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">Template: {(asset.metadata_json as { template_family?: string } | null)?.template_family || "minimal"}</p>
+                  <div className="flex flex-col gap-2">
+                    <h3 className="text-base font-semibold text-foreground">{assetLabel(asset.asset_type)}</h3>
+                    <div className="flex flex-wrap gap-2">
+                      <span className="rounded-none border border-border/80 px-2 py-1 text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+                        Template: {(asset.metadata_json as { template_family?: string } | null)?.template_family || "minimal"}
+                      </span>
+                      <span className="rounded-none border border-border/80 px-2 py-1 text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+                        {renderSourceLabel(asset)}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {warningMessages(asset).length ? `${warningMessages(asset).length} warning(s) attached to this asset.` : "No attached quality warnings."}
+                    </p>
+                  </div>
+
                   <p className="mt-2 inline-flex items-center gap-2 rounded-none border border-border/80 px-3 py-1 text-xs text-muted-foreground">
                     <Sparkles className="size-3.5" />
-                    {(asset.metadata_json as { render_source?: string } | null)?.render_source === "mistral_image_generation" ? "Mistral image generated" : "Template fallback"}
+                    {renderSourceLabel(asset)}
                   </p>
                   {warningMessages(asset).length ? (
                     <div className="mt-3 rounded-[4px] border border-border/80 bg-transparent p-2.5">
