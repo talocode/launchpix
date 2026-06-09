@@ -10,6 +10,7 @@ import type { ProjectRecord, UploadRecord } from "@/types/project";
 import { consumeGenerationCredit, getOrCreateSubscription, refundGenerationCredit } from "@/lib/services/billing/subscription";
 import { PLAN_CONFIG } from "@/lib/services/billing/plans";
 import { trackEvent } from "@/lib/services/analytics/events";
+import { logGenerationError, logGenerationEvent } from "@/lib/services/generations/logging";
 
 const ASSET_BUCKET = process.env.STORAGE_BUCKET_ASSETS || "launchpix-assets";
 const MISTRAL_ASSET_TIMEOUT_MS = 45_000;
@@ -57,6 +58,13 @@ export async function runGenerationForProject(project: ProjectRecord, uploads: U
   let creditRefunded = false;
   let creditConsumed = false;
 
+  logGenerationEvent("info", "generation_pipeline_started", {
+    projectId: project.id,
+    projectName: project.name,
+    userId: project.user_id,
+    uploadCount: uploads.length
+  });
+
   const { data: generation, error: generationError } = await supabase
     .from("generations")
     .insert({ project_id: project.id, status: "queued" })
@@ -70,8 +78,21 @@ export async function runGenerationForProject(project: ProjectRecord, uploads: U
     creditConsumed = true;
     const plan = PLAN_CONFIG[(subscription.plan as keyof typeof PLAN_CONFIG) || "credits"] || PLAN_CONFIG.credits;
 
+    logGenerationEvent("info", "generation_credit_consumed", {
+      projectId: project.id,
+      generationId: generation.id,
+      userId: project.user_id,
+      plan: plan.id,
+      creditsRemaining: subscription.credits_remaining
+    });
+
     await trackEvent({ userId: project.user_id, projectId: project.id, eventType: "generation_started", metadata: { generationId: generation.id, projectName: project.name } });
     await supabase.from("generations").update({ status: "analyzing" }).eq("id", generation.id);
+    logGenerationEvent("info", "generation_stage_started", {
+      projectId: project.id,
+      generationId: generation.id,
+      stage: "analyzing"
+    });
 
     const planningInput = {
       project: {
@@ -87,8 +108,12 @@ export async function runGenerationForProject(project: ProjectRecord, uploads: U
     };
 
     const planResponse = await mistralAdapter.generateAssetPlan(planningInput).catch((error) => {
-      const message = error instanceof Error ? error.message : String(error);
-      console.error("AI planning failed; continuing with deterministic plan:", message);
+      logGenerationError("generation_plan_fallback", error, {
+        projectId: project.id,
+        generationId: generation.id,
+        stage: "planning",
+        uploadCount: uploads.length
+      });
       return createDeterministicGenerationPlan(planningInput);
     });
 
@@ -98,8 +123,18 @@ export async function runGenerationForProject(project: ProjectRecord, uploads: U
       .from("generations")
       .update({ status: "generating_copy", ai_summary: safePlan, copy_json: safePlan, style_json: safePlan })
       .eq("id", generation.id);
+    logGenerationEvent("info", "generation_stage_started", {
+      projectId: project.id,
+      generationId: generation.id,
+      stage: "generating_copy"
+    });
 
     await supabase.from("generations").update({ status: "rendering_assets" }).eq("id", generation.id);
+    logGenerationEvent("info", "generation_stage_started", {
+      projectId: project.id,
+      generationId: generation.id,
+      stage: "rendering_assets"
+    });
 
     const deterministicAssets = buildDeterministicAssets(safePlan, uploads);
     const zip = new JSZip();
@@ -154,7 +189,12 @@ export async function runGenerationForProject(project: ProjectRecord, uploads: U
         });
       } catch (error) {
         renderSource = "deterministic_template";
-        console.error("Mistral image generation failed; using deterministic renderer:", error instanceof Error ? error.message : error);
+        logGenerationError("generation_asset_render_fallback", error, {
+          projectId: project.id,
+          generationId: generation.id,
+          assetType: asset.asset_type,
+          stage: "mistral_image_generation"
+        });
         fullPng = await renderAssetPng({
           width: asset.width,
           height: asset.height,
@@ -206,6 +246,12 @@ export async function runGenerationForProject(project: ProjectRecord, uploads: U
     }
 
     if (qualityFailures.length) {
+      logGenerationEvent("warn", "generation_quality_blocked_assets", {
+        projectId: project.id,
+        generationId: generation.id,
+        assetCount: qualityFailures.length,
+        assetTypes: qualityFailures.map((item) => item.assetType)
+      });
       const failureMessage = qualityFailures
         .map((failure) => `${failure.assetType}: ${failure.issues.join(" | ")}`)
         .join(" ; ");
@@ -250,6 +296,14 @@ export async function runGenerationForProject(project: ProjectRecord, uploads: U
         assets: deterministicAssets.length
       }
     });
+    logGenerationEvent("info", "generation_pipeline_completed", {
+      projectId: project.id,
+      generationId: generation.id,
+      assetCount: deterministicAssets.length,
+      renderSources,
+      qualityWarningCount: qualityWarnings.length,
+      durationMs: Date.now() - generationStartedAt
+    });
 
     return { generationId: generation.id };
   } catch (error) {
@@ -259,10 +313,23 @@ export async function runGenerationForProject(project: ProjectRecord, uploads: U
       await refundGenerationCredit(project.user_id, message, generation.id);
       creditRefunded = true;
     } catch (refundError) {
-      if (creditConsumed) console.error("Failed to refund generation credit:", refundError instanceof Error ? refundError.message : refundError);
+      if (creditConsumed) {
+        logGenerationError("generation_credit_refund_failed", refundError, {
+          projectId: project.id,
+          generationId: generation.id,
+          userId: project.user_id
+        });
+      }
     }
     await supabase.from("generations").update({ status: "failed", error_message: message }).eq("id", generation.id);
     await supabase.from("projects").update({ status: "failed" }).eq("id", project.id);
+    logGenerationError("generation_pipeline_failed", error, {
+      projectId: project.id,
+      generationId: generation.id,
+      userId: project.user_id,
+      creditConsumed,
+      durationMs: Date.now() - generationStartedAt
+    });
     await trackEvent({
       userId: project.user_id,
       projectId: project.id,
