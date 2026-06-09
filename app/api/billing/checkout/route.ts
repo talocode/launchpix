@@ -4,6 +4,7 @@ import { createCreditCheckout, validateCreditCheckoutConfig } from "@/lib/paymen
 import { trackEvent } from "@/lib/services/analytics/events";
 import { isCreditPackId } from "@/lib/services/billing/plans";
 import { buildAppUrl } from "@/lib/app-url";
+import { logGenerationError, logGenerationEvent } from "@/lib/services/generations/logging";
 
 export async function POST(req: Request) {
   try {
@@ -17,6 +18,7 @@ export async function POST(req: Request) {
 
     await validateCreditCheckoutConfig(packId);
 
+    logGenerationEvent("info", "billing_checkout_started", { userId: user.id, packId });
     await trackEvent({ userId: user.id, eventType: "checkout_started", metadata: { pack: packId, provider: "lemon_squeezy" } });
 
     const data = await createCreditCheckout({
@@ -34,7 +36,7 @@ export async function POST(req: Request) {
     }
 
     const message = error instanceof Error ? error.message : "Checkout could not start. Please try again.";
-    console.error("Lemon Squeezy checkout failed:", message);
+    logGenerationError("billing_checkout_failed", error, { stage: "checkout" });
 
     if (message.includes("related resource does not exist") || message.includes("/data/relationships/store") || message.includes("/data/relationships/variant")) {
       return NextResponse.json(
