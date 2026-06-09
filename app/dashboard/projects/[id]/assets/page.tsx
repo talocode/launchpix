@@ -66,6 +66,20 @@ export default async function AssetsPage({ params }: { params: Promise<{ id: str
               ))}
             </div>
           </div>
+
+          <div className="mt-6 grid gap-3 md:grid-cols-3">
+            {[
+              { label: "Pack status", value: generation.status.replaceAll("_", " "), hint: "Current generation state" },
+              { label: "Warnings", value: qualityWarnings.length.toString(), hint: qualityWarnings.length ? "Review before publishing" : "No active warnings" },
+              { label: "Render source", value: Object.keys(renderSources).join(" · ") || "deterministic_template", hint: "Fallbacks are expected when needed" }
+            ].map((item) => (
+              <div key={item.label} className="rounded-[4px] border border-border/80 bg-transparent p-4">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{item.label}</p>
+                <p className="mt-2 text-lg font-semibold text-foreground">{item.value}</p>
+                <p className="mt-1 text-xs leading-6 text-muted-foreground">{item.hint}</p>
+              </div>
+            ))}
+          </div>
         </section>
 
         <section className="grid gap-4 lg:grid-cols-[0.85fr_1.15fr]">
@@ -123,19 +137,25 @@ export default async function AssetsPage({ params }: { params: Promise<{ id: str
               <p className="text-sm text-muted-foreground">{listingCount} listing frames in the current pack.</p>
             </div>
 
-            <div className="space-y-3">
-              {history.map((item: { id: string; created_at: string; status: string; error_message: string | null }) => (
-                <div key={item.id} className="surface-muted flex flex-col gap-2 p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="font-semibold text-foreground">{new Date(item.created_at).toLocaleString()}</p>
-                    <p className="mt-1 text-muted-foreground">
-                      Status: <span className="font-medium text-foreground">{item.status.replaceAll("_", " ")}</span>
-                    </p>
+            {history.length ? (
+              <div className="space-y-3">
+                {history.map((item: { id: string; created_at: string; status: string; error_message: string | null }) => (
+                  <div key={item.id} className="surface-muted flex flex-col gap-3 p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-foreground">{new Date(item.created_at).toLocaleString()}</p>
+                      <p className="mt-1 text-muted-foreground">
+                        Status: <span className="font-medium text-foreground">{item.status.replaceAll("_", " ")}</span>
+                      </p>
+                    </div>
+                    {item.error_message ? <p className="max-w-2xl text-muted-foreground">{item.error_message}</p> : null}
                   </div>
-                  {item.error_message ? <p className="text-muted-foreground">{item.error_message}</p> : null}
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-[4px] border border-dashed border-border/80 p-6 text-sm leading-7 text-muted-foreground">
+                No prior generations yet. Once you rerender or regenerate, LaunchPix will show each run here with timestamps and status transitions.
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

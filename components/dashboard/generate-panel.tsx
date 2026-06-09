@@ -24,6 +24,48 @@ const statusLabel: Record<string, string> = {
   idle: "Ready when you are"
 };
 
+function classifyGenerationError(message: string, projectId: string) {
+  const lower = message.toLowerCase();
+
+  if (lower.includes("no credits remaining") || lower.includes("credit")) {
+    return {
+      title: "Add credits to continue.",
+      detail: "This workspace has no generation credits left. Buy credits, then rerun generation.",
+      action: { label: "Buy credits", href: "/settings/billing" }
+    };
+  }
+
+  if (lower.includes("upload") || lower.includes("screenshot")) {
+    return {
+      title: "Upload screenshots before generating.",
+      detail: "LaunchPix needs at least one screenshot to build the pack.",
+      action: { label: "Review project", href: `/dashboard/projects/${projectId}` }
+    };
+  }
+
+  if (lower.includes("quality check")) {
+    return {
+      title: "Refine the brief and retry.",
+      detail: "The generated copy or layout failed quality validation. Shorten copy, keep callouts concise, and try again.",
+      action: { label: "Review project details", href: "/dashboard/projects" }
+    };
+  }
+
+  if (lower.includes("sign in")) {
+    return {
+      title: "Session expired.",
+      detail: "Sign in again and retry generation.",
+      action: { label: "Sign in again", href: "/login" }
+    };
+  }
+
+  return {
+    title: "Generation needs another attempt.",
+    detail: "LaunchPix could not complete the request. Retry after checking the project brief and upload set.",
+    action: { label: "Review project", href: `/dashboard/projects/${projectId}` }
+  };
+}
+
 export function GeneratePanel({ projectId, ready, missing, credits }: { projectId: string; ready: boolean; missing: string[]; credits: number }) {
   const router = useRouter();
   const [generation, setGeneration] = useState<Gen>(null);
@@ -107,6 +149,11 @@ export function GeneratePanel({ projectId, ready, missing, credits }: { projectI
   const missingText = useMemo(() => missing.join(", "), [missing]);
   const blockedByCredits = credits <= 0;
   const progressWidth = busy ? "67%" : generation?.status === "completed" ? "100%" : ready ? "32%" : "18%";
+  const errorInfo = useMemo(() => {
+    if (generation?.status !== "failed" && !apiError) return null;
+    const message = generation?.error_message || apiError || "";
+    return classifyGenerationError(message, projectId);
+  }, [apiError, generation?.error_message, generation?.status, projectId]);
 
   return (
     <section className="surface space-y-5 p-5 sm:p-6">
@@ -154,8 +201,20 @@ export function GeneratePanel({ projectId, ready, missing, credits }: { projectI
             <div className="h-full rounded-none bg-foreground transition-all duration-500" style={{ width: progressWidth }} />
           </div>
 
-          {generation?.status === "failed" ? <p className="text-sm text-foreground">{generation.error_message || "Generation failed. Please retry."}</p> : null}
-          {apiError ? <p className="text-sm text-foreground">{apiError}</p> : null}
+          {errorInfo ? (
+            <div className="rounded-[4px] border border-border/80 bg-transparent p-3">
+              <p className="text-sm font-semibold text-foreground">{errorInfo.title}</p>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">{errorInfo.detail}</p>
+              {errorInfo.action ? (
+                <Link className="mt-2 inline-flex text-sm font-medium text-foreground underline underline-offset-4" href={errorInfo.action.href as never}>
+                  {errorInfo.action.label}
+                </Link>
+              ) : null}
+              {generation?.error_message || apiError ? (
+                <p className="mt-2 text-xs leading-6 text-muted-foreground">{generation?.error_message || apiError}</p>
+              ) : null}
+            </div>
+          ) : null}
         </div>
 
         <div className="rounded-[4px] border border-border/80 bg-transparent p-4">
@@ -241,7 +300,7 @@ export function GeneratePanel({ projectId, ready, missing, credits }: { projectI
           </div>
         ) : null}
         {generation?.status === "failed" && !needsCredits && !sessionExpired && qualityFailures.length === 0 ? (
-          <p className="text-xs text-slate-500 sm:ml-1">If quality checks fail, shorten copy lines, keep callouts concise, and ensure screenshots are uploaded.</p>
+          <p className="text-xs text-muted-foreground sm:ml-1">If quality checks fail, shorten copy lines, keep callouts concise, and ensure screenshots are uploaded.</p>
         ) : null}
       </div>
     </section>
