@@ -7,6 +7,7 @@ import { generateMistralAssetPng } from "@/lib/ai/mistral-image";
 import { generationPlanSchema, templateFamilySchema } from "@/lib/ai/schemas/asset-plan";
 import { runAssetQualityChecks } from "@/lib/render/quality";
 import { trackEvent } from "@/lib/services/analytics/events";
+import { logGenerationError, logGenerationEvent } from "@/lib/services/generations/logging";
 
 const ASSET_BUCKET = process.env.STORAGE_BUCKET_ASSETS || "launchpix-assets";
 
@@ -94,7 +95,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ assetId
     });
   } catch (error) {
     renderSource = "deterministic_template";
-    console.error("Mistral asset rerender failed; using deterministic renderer:", error instanceof Error ? error.message : error);
+    logGenerationError("asset_rerender_fallback", error, {
+      assetId: asset.id,
+      generationId: asset.generation_id,
+      projectId: project?.id,
+      assetType: asset.asset_type
+    });
     png = await renderAssetPng({
       width: asset.width,
       height: asset.height,
@@ -138,6 +144,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ assetId
       }
     })
     .eq("id", asset.id);
+
+  logGenerationEvent("info", "asset_rerender_completed", {
+    assetId: asset.id,
+    generationId: asset.generation_id,
+    projectId: project?.id,
+    renderSource
+  });
 
   await trackEvent({ userId: user.id, projectId: project?.id, eventType: "asset_rerendered", metadata: { assetId: asset.id, generationId: asset.generation_id, render_source: renderSource } });
 
