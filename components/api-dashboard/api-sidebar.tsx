@@ -1,5 +1,6 @@
 "use client";
 
+import type { Route } from "next";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
@@ -18,7 +19,7 @@ import {
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
-type NavItem = { href: string; label: string; icon: LucideIcon };
+type NavItem = { href: Route; label: string; icon: LucideIcon };
 
 const manageItems: NavItem[] = [
   { href: "/dashboard/api", label: "Dashboard", icon: LayoutDashboard },
@@ -35,7 +36,7 @@ const buildItems: NavItem[] = [
   { href: "/pricing", label: "Pricing", icon: FileText }
 ];
 
-function isActive(pathname: string, href: string) {
+function isActive(pathname: string, href: Route) {
   if (href === "/dashboard/api") return pathname === "/dashboard/api";
   return pathname === href || pathname.startsWith(`${href}/`);
 }
