@@ -18,6 +18,19 @@ export async function getGenerationHistory(projectId: string) {
   return data ?? [];
 }
 
+export async function getGenerationForProject(projectId: string, generationId: string) {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("generations")
+    .select("*")
+    .eq("id", generationId)
+    .eq("project_id", projectId)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  return data;
+}
+
 export async function getGenerationAssets(generationId: string) {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.from("assets").select("*").eq("generation_id", generationId).order("created_at");

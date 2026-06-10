@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "test": "tsx --test lib/services/generations/*.test.ts",
     "video:studio": "remotion studio remotion/index.ts",
     "video:render": "remotion render remotion/index.ts LaunchPixDemo output/launchpix-demo.mp4",
     "video:render:chrome": "remotion render remotion/index.ts LaunchPixDemo output/launchpix-demo.mp4 --browser-executable=\"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe\" --overwrite",
@@ -48,6 +49,7 @@
     "remotion": "^4.0.380",
     "resend-cli": "^2.2.1",
     "tailwindcss": "^3.4.17",
+    "tsx": "^4.22.4",
     "typescript": "^5.8.3"
   }
 }
