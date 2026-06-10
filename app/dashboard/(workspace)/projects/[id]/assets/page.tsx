@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Clock3, Download, Images, Sparkles } from "lucide-react";
+import { AlertTriangle, Clock3, Download, Images, Sparkles } from "lucide-react";
 import { AssetsManager } from "@/components/dashboard/assets-manager";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -36,6 +36,8 @@ export default async function AssetsPage({ params }: { params: Promise<{ id: str
     const assets = await getGenerationAssets(generation.id);
     const completedAt = generation.updated_at ? new Date(generation.updated_at).toLocaleString() : new Date(generation.created_at).toLocaleString();
     const listingCount = assets.filter((asset: { asset_type: string }) => asset.asset_type.includes("listing")).length;
+    const qualityWarnings = Array.isArray(generation.style_json?.quality_warnings) ? (generation.style_json?.quality_warnings as Array<{ asset_type: string; code: string; message: string }>) : [];
+    const renderSources = generation.style_json?.render_sources && typeof generation.style_json.render_sources === "object" ? generation.style_json.render_sources as Record<string, number> : {};
 
     return (
       <div className="space-y-6">
@@ -59,9 +61,66 @@ export default async function AssetsPage({ params }: { params: Promise<{ id: str
                 <div key={item.label} className="surface-muted min-w-[170px] p-4">
                   <item.icon className="size-5 text-foreground" />
                   <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">{item.label}</p>
-                  <p className="mt-2 truncate text-sm font-semibold text-slate-950 dark:text-white">{item.value}</p>
+                  <p className="mt-2 truncate text-sm font-semibold text-foreground">{item.value}</p>
                 </div>
               ))}
+            </div>
+          </div>
+
+          <div className="mt-6 grid gap-3 md:grid-cols-3">
+            {[
+              { label: "Pack status", value: generation.status.replaceAll("_", " "), hint: "Current generation state" },
+              { label: "Warnings", value: qualityWarnings.length.toString(), hint: qualityWarnings.length ? "Review before publishing" : "No active warnings" },
+              { label: "Render source", value: Object.keys(renderSources).join(" · ") || "deterministic_template", hint: "Fallbacks are expected when needed" }
+            ].map((item) => (
+              <div key={item.label} className="rounded-[4px] border border-border/80 bg-transparent p-4">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{item.label}</p>
+                <p className="mt-2 text-lg font-semibold text-foreground">{item.value}</p>
+                <p className="mt-1 text-xs leading-6 text-muted-foreground">{item.hint}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="grid gap-4 lg:grid-cols-[0.85fr_1.15fr]">
+          <div className="surface p-6">
+            <p className="dashboard-label">Quality state</p>
+            <h2 className="mt-3 font-mono text-2xl font-light tracking-[-0.04em] text-foreground">Pack readiness</h2>
+            <p className="mt-3 text-sm leading-7 text-muted-foreground">
+              These signals come from the latest generation run and help you decide whether to ship, refine copy, or rerender a specific asset.
+            </p>
+            <div className="mt-5 space-y-3">
+              <div className="flex items-center justify-between border-b border-border/80 pb-3 text-sm">
+                <span className="text-muted-foreground">Warnings</span>
+                <span className="font-semibold text-foreground">{qualityWarnings.length}</span>
+              </div>
+              <div className="flex items-center justify-between border-b border-border/80 pb-3 text-sm">
+                <span className="text-muted-foreground">Render sources</span>
+                <span className="font-semibold text-foreground">{Object.keys(renderSources).length || 1}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Listing frames</span>
+                <span className="font-semibold text-foreground">{listingCount}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="surface p-6">
+            <p className="dashboard-label">Latest warnings</p>
+            <div className="mt-3 space-y-3">
+              {qualityWarnings.length ? qualityWarnings.slice(0, 4).map((warning) => (
+                <div key={`${warning.asset_type}-${warning.code}`} className="rounded-[4px] border border-border/80 p-3">
+                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                    <AlertTriangle className="size-3.5" />
+                    {warning.asset_type.replaceAll("_", " ")}
+                  </div>
+                  <p className="mt-2 text-sm text-foreground">{warning.message}</p>
+                </div>
+              )) : (
+                <p className="text-sm leading-7 text-muted-foreground">
+                  No active warnings in the latest pack. The generation output is ready for review and export.
+                </p>
+              )}
             </div>
           </div>
         </section>
@@ -78,19 +137,25 @@ export default async function AssetsPage({ params }: { params: Promise<{ id: str
               <p className="text-sm text-muted-foreground">{listingCount} listing frames in the current pack.</p>
             </div>
 
-            <div className="space-y-3">
-              {history.map((item: { id: string; created_at: string; status: string; error_message: string | null }) => (
-                <div key={item.id} className="surface-muted flex flex-col gap-2 p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="font-semibold text-foreground">{new Date(item.created_at).toLocaleString()}</p>
-                    <p className="mt-1 text-muted-foreground">
-                      Status: <span className="font-medium text-foreground">{item.status.replaceAll("_", " ")}</span>
-                    </p>
+            {history.length ? (
+              <div className="space-y-3">
+                {history.map((item: { id: string; created_at: string; status: string; error_message: string | null }) => (
+                  <div key={item.id} className="surface-muted flex flex-col gap-3 p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-foreground">{new Date(item.created_at).toLocaleString()}</p>
+                      <p className="mt-1 text-muted-foreground">
+                        Status: <span className="font-medium text-foreground">{item.status.replaceAll("_", " ")}</span>
+                      </p>
+                    </div>
+                    {item.error_message ? <p className="max-w-2xl text-muted-foreground">{item.error_message}</p> : null}
                   </div>
-                  {item.error_message ? <p className="text-muted-foreground">{item.error_message}</p> : null}
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-[4px] border border-dashed border-border/80 p-6 text-sm leading-7 text-muted-foreground">
+                No prior generations yet. Once you rerender or regenerate, LaunchPix will show each run here with timestamps and status transitions.
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
