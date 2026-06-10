@@ -3,6 +3,7 @@ import type { ProjectRecord, UploadRecord } from "@/types/project";
 import { consumeForGeneration, getUserBillingState, refundForGeneration } from "@/lib/services/generations/billing";
 import { createQueuedGeneration } from "@/lib/services/generations/create-generation";
 import { failGeneration, finalizeGeneration, trackGenerationStarted } from "@/lib/services/generations/finalize";
+import { logGenerationError, logGenerationEvent } from "@/lib/services/generations/logging";
 import { markGenerationAnalyzing, planAssets } from "@/lib/services/generations/planner";
 import { renderAssets } from "@/lib/services/generations/renderer";
 import { persistAssetsAndZip } from "@/lib/services/generations/storage";
@@ -13,11 +14,26 @@ export async function runGenerationForProject(project: ProjectRecord, uploads: U
   const generationStartedAt = Date.now();
   let creditConsumed = false;
 
+  logGenerationEvent("info", "generation_pipeline_started", {
+    projectId: project.id,
+    projectName: project.name,
+    userId: project.user_id,
+    uploadCount: uploads.length
+  });
+
   const { supabase, generation } = await createQueuedGeneration(project.id);
 
   try {
-    const { plan } = await consumeForGeneration(project.user_id);
+    const { plan, subscription } = await consumeForGeneration(project.user_id);
     creditConsumed = true;
+
+    logGenerationEvent("info", "generation_credit_consumed", {
+      projectId: project.id,
+      generationId: generation.id,
+      userId: project.user_id,
+      plan: plan.id,
+      creditsRemaining: subscription.credits_remaining
+    });
 
     await trackGenerationStarted(project, generation.id);
     await markGenerationAnalyzing(supabase, generation.id);
@@ -46,8 +62,25 @@ export async function runGenerationForProject(project: ProjectRecord, uploads: U
       assetCount: deterministicAssets.length
     });
 
+    logGenerationEvent("info", "generation_pipeline_completed", {
+      projectId: project.id,
+      generationId: generation.id,
+      assetCount: deterministicAssets.length,
+      renderSources,
+      qualityWarningCount: qualityWarnings.length,
+      durationMs: Date.now() - generationStartedAt
+    });
+
     return { generationId: generation.id };
   } catch (error) {
+    logGenerationError("generation_pipeline_failed", error, {
+      projectId: project.id,
+      generationId: generation.id,
+      userId: project.user_id,
+      creditConsumed,
+      durationMs: Date.now() - generationStartedAt
+    });
+
     return failGeneration({
       supabase,
       project,

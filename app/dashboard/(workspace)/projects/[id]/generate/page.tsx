@@ -26,7 +26,7 @@ export default async function GeneratePage({ params }: { params: Promise<{ id: s
         <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
           <div className="min-w-0">
             <p className="dashboard-label">Generation workspace</p>
-            <h2 className="mt-2 truncate text-2xl font-semibold sm:text-3xl">{project.name}</h2>
+            <h2 className="mt-2 truncate font-mono text-2xl font-light tracking-[-0.04em] text-foreground sm:text-3xl">{project.name}</h2>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
               {project.description || "Add a concise project description so Talocode LaunchPix can build a sharper asset story."}
             </p>
@@ -39,18 +39,18 @@ export default async function GeneratePage({ params }: { params: Promise<{ id: s
               ["Uploads", `${uploads.length}/5`],
               ["Export", plan.fullResolutionExport ? "Full" : "Preview"]
             ].map(([label, value]) => (
-              <div key={label} className="rounded-2xl border border-white/[0.08] bg-white/[0.035] px-3 py-2.5">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">{label}</p>
-                <p className="mt-1 truncate text-sm font-semibold text-white">{value}</p>
+              <div key={label} className="rounded-[4px] border border-border/80 bg-transparent px-3 py-2.5">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{label}</p>
+                <p className="mt-1 truncate text-sm font-semibold text-foreground">{value}</p>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="mt-4 grid gap-2 text-xs text-slate-400 sm:grid-cols-3">
-          <div className="rounded-2xl bg-[#050810] px-3 py-2"><span className="text-slate-500">Product:</span> {project.product_type}</div>
-          <div className="rounded-2xl bg-[#050810] px-3 py-2"><span className="text-slate-500">Platform:</span> {project.platform}</div>
-          <div className="rounded-2xl bg-[#050810] px-3 py-2"><span className="text-slate-500">Audience:</span> {project.audience}</div>
+        <div className="mt-4 grid gap-2 text-xs text-muted-foreground sm:grid-cols-3">
+          <div className="rounded-[4px] border border-border/80 px-3 py-2"><span className="text-muted-foreground">Product:</span> <span className="text-foreground">{project.product_type}</span></div>
+          <div className="rounded-[4px] border border-border/80 px-3 py-2"><span className="text-muted-foreground">Platform:</span> <span className="text-foreground">{project.platform}</span></div>
+          <div className="rounded-[4px] border border-border/80 px-3 py-2"><span className="text-muted-foreground">Audience:</span> <span className="text-foreground">{project.audience}</span></div>
         </div>
       </section>
 

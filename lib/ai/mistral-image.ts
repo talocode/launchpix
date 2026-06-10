@@ -1,5 +1,6 @@
 import { Mistral } from "@mistralai/mistralai";
 import type { GenerationPlan } from "@/lib/ai/schemas/asset-plan";
+import { logGenerationError, logGenerationEvent } from "@/lib/services/generations/logging";
 
 const imageModel = process.env.MISTRAL_IMAGE_MODEL || "mistral-medium-latest";
 const MIN_IMAGE_BYTES = 24_000;
@@ -38,9 +39,13 @@ function assertUsablePng(buffer: Buffer) {
 }
 
 async function getImageAgentId(client: Mistral) {
-  if (process.env.MISTRAL_IMAGE_AGENT_ID) return process.env.MISTRAL_IMAGE_AGENT_ID;
+  if (process.env.MISTRAL_IMAGE_AGENT_ID) {
+    logGenerationEvent("info", "mistral_image_agent_configured", { model: imageModel });
+    return process.env.MISTRAL_IMAGE_AGENT_ID;
+  }
   if (cachedImageAgentId) return cachedImageAgentId;
 
+  logGenerationEvent("info", "mistral_image_agent_create_started", { model: imageModel });
   const agent = await client.beta.agents.create({
     model: imageModel,
     name: "LaunchPix Image Generation Agent",
@@ -55,6 +60,7 @@ async function getImageAgentId(client: Mistral) {
   });
 
   cachedImageAgentId = agent.id;
+  logGenerationEvent("info", "mistral_image_agent_create_completed", { model: imageModel });
   return agent.id;
 }
 
@@ -133,6 +139,13 @@ export async function generateMistralAssetPng(input: {
 
   const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
   const agentId = await getImageAgentId(client);
+  logGenerationEvent("info", "mistral_image_request_started", {
+    model: imageModel,
+    agentId,
+    assetType: input.asset.asset_type,
+    width: input.asset.width,
+    height: input.asset.height
+  });
   const response = await client.beta.conversations.start({
     agentId,
     inputs: buildImagePrompt(input),
@@ -140,12 +153,29 @@ export async function generateMistralAssetPng(input: {
   });
 
   const fileId = findGeneratedFileId(response.outputs);
-  if (!fileId) throw new Error("Mistral image generation did not return an image file.");
+  if (!fileId) {
+    logGenerationEvent("warn", "mistral_image_missing_file", {
+      model: imageModel,
+      agentId,
+      assetType: input.asset.asset_type
+    });
+    throw new Error("Mistral image generation did not return an image file.");
+  }
 
   try {
     const stream = await client.files.download({ fileId });
+    logGenerationEvent("info", "mistral_image_request_completed", {
+      model: imageModel,
+      agentId,
+      assetType: input.asset.asset_type,
+      fileId
+    });
     return assertUsablePng(await streamToBuffer(stream));
   } catch (error) {
+    logGenerationError("mistral_image_download_failed", error, {
+      model: imageModel,
+      agentId
+    });
     throw new Error(`Could not download Mistral generated image: ${redactError(error)}`);
   }
 }
