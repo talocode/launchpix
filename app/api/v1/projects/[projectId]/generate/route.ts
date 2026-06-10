@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireLaunchPixApiKey } from "@/lib/api-key";
 import { requireApiUserId } from "@/lib/api-user";
 import { getProjectOverview } from "@/lib/services/projects/queries";
-import { runGenerationForProject } from "@/lib/services/generations/runner";
+import { submitGenerationRequest } from "@/lib/services/generations/submit-generation";
 import { getLatestGeneration } from "@/lib/services/generations/queries";
 import { allowGenerationAttempt } from "@/lib/services/access/rate-limit";
 
@@ -34,7 +34,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ pro
   const { project, uploads } = await getProjectOverview(projectId, userResult.userId);
   if (!uploads.length) return NextResponse.json({ error: "At least one screenshot is required." }, { status: 400 });
 
-  const { generationId } = await runGenerationForProject(project, uploads);
-  return NextResponse.json({ generationId }, { status: 201 });
+  const response = await submitGenerationRequest(project);
+  return NextResponse.json(response, {
+    status: 202,
+    headers: {
+      Location: response.poll
+    }
+  });
 }
 
