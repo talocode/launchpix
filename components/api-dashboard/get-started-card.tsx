@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -9,7 +10,7 @@ export function GetStartedCard({
 }: {
   title: string;
   description: string;
-  href: string;
+  href: Route;
   icon: ReactNode;
 }) {
   return (
