@@ -1,6 +1,6 @@
 import type { ProjectRecord } from "@/types/project";
 import { consumeForGeneration, refundForGeneration } from "@/lib/services/generations/billing";
-import { createQueuedGeneration } from "@/lib/services/generations/create-generation";
+import { createPendingGeneration, markProjectQueued, promoteGenerationToQueued } from "@/lib/services/generations/create-generation";
 import { enqueueGenerationJob } from "@/lib/services/generations/enqueue";
 import { buildAcceptedGenerationResponse, type AcceptedGenerationResponse } from "@/lib/services/generations/enqueue-response";
 import { failGeneration, trackGenerationStarted } from "@/lib/services/generations/finalize";
@@ -9,22 +9,25 @@ export async function submitGenerationRequest(project: ProjectRecord): Promise<A
   const generationStartedAt = Date.now();
   let creditConsumed = false;
 
-  const { supabase, generation } = await createQueuedGeneration(project.id);
+  const { supabase, generation } = await createPendingGeneration(project.id);
 
   try {
     await consumeForGeneration(project.user_id);
     creditConsumed = true;
 
+    const queuedGeneration = await promoteGenerationToQueued(supabase, generation.id);
+    await markProjectQueued(supabase, project.id);
+
     await enqueueGenerationJob({
       supabase,
-      generationId: generation.id,
+      generationId: queuedGeneration.id,
       projectId: project.id,
       userId: project.user_id
     });
 
-    await trackGenerationStarted(project, generation.id);
+    await trackGenerationStarted(project, queuedGeneration.id);
 
-    return buildAcceptedGenerationResponse(project.id, generation.id);
+    return buildAcceptedGenerationResponse(project.id, queuedGeneration.id);
   } catch (error) {
     return failGeneration({
       supabase,

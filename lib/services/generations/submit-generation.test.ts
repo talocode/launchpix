@@ -20,4 +20,25 @@ describe("submitGenerationRequest module boundaries", () => {
     assert.equal(response.status, "queued");
     assert.match(response.poll, /\/api\/v1\/projects\/proj-1\/generations\/gen-1$/);
   });
+
+  it("reserves credit before promoting generation to claimable queued", () => {
+    const source = readFileSync(fileURLToPath(new URL("./submit-generation.ts", import.meta.url)), "utf8");
+    const consumeIndex = source.indexOf("consumeForGeneration");
+    const promoteIndex = source.indexOf("promoteGenerationToQueued");
+    const enqueueIndex = source.indexOf("enqueueGenerationJob");
+
+    assert.ok(consumeIndex >= 0);
+    assert.ok(promoteIndex > consumeIndex);
+    assert.ok(enqueueIndex > promoteIndex);
+    assert.equal(source.includes("createPendingGeneration"), true);
+  });
+
+  it("marks the project queued before returning 202", () => {
+    const source = readFileSync(fileURLToPath(new URL("./submit-generation.ts", import.meta.url)), "utf8");
+    const projectQueuedIndex = source.indexOf("markProjectQueued");
+    const returnIndex = source.indexOf("buildAcceptedGenerationResponse");
+
+    assert.ok(projectQueuedIndex >= 0);
+    assert.ok(returnIndex > projectQueuedIndex);
+  });
 });
