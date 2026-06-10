@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test lib/services/generations/status.test.ts lib/services/generations/claim.test.ts lib/services/generations/queries.test.ts",
+    "test": "tsx --test lib/services/generations/*.test.ts",
     "video:studio": "remotion studio remotion/index.ts",
     "video:render": "remotion render remotion/index.ts LaunchPixDemo output/launchpix-demo.mp4",
     "video:render:chrome": "remotion render remotion/index.ts LaunchPixDemo output/launchpix-demo.mp4 --browser-executable=\"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe\" --overwrite",
