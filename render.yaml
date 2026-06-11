@@ -15,6 +15,8 @@ services:
         value: "1"
       - key: NEXT_PUBLIC_APP_URL
         sync: false
+      - key: NEXTAUTH_URL
+        sync: false
       - key: NEXT_PUBLIC_SUPABASE_URL
         sync: false
       - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -41,6 +43,12 @@ services:
         sync: false
       - key: LAUNCHPIX_API_KEY
         sync: false
+      - key: LAUNCHPIX_ASYNC_GENERATION
+        sync: false
+      - key: LAUNCHPIX_WORKER_SECRET
+        sync: false
+      - key: LAUNCHPIX_GENERATION_WORKER_BATCH_LIMIT
+        sync: false
       - key: LEMON_SQUEEZY_API_KEY
         sync: false
       - key: LEMON_SQUEEZY_STORE_ID
@@ -59,3 +67,23 @@ services:
         sync: false
       - key: RESEND_WEBHOOK_SECRET
         sync: false
+
+  - type: cron
+    name: talocode-launchpix-generation-worker
+    runtime: node
+    schedule: "*/5 * * * *"
+    buildCommand: npm ci
+    startCommand: npm run worker:generations
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: NEXT_PUBLIC_APP_URL
+        sync: false
+      - key: LAUNCHPIX_WORKER_SECRET
+        sync: false
+      - key: LAUNCHPIX_ASYNC_GENERATION
+        value: "true"
+      - key: LAUNCHPIX_GENERATION_WORKER_BATCH_LIMIT
+        sync: false
+      - key: LAUNCHPIX_GENERATION_WORKER_ID
+        value: render-cron

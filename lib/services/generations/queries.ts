@@ -1,4 +1,10 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+export type QueuedGenerationTarget = {
+  generationId: string;
+  projectId: string;
+};
 
 export async function getLatestGeneration(projectId: string) {
   const supabase = await createSupabaseServerClient();
@@ -29,6 +35,22 @@ export async function getGenerationForProject(projectId: string, generationId: s
 
   if (error) throw new Error(error.message);
   return data;
+}
+
+export async function listQueuedGenerations(supabase: SupabaseClient, limit: number): Promise<QueuedGenerationTarget[]> {
+  const { data, error } = await supabase
+    .from("generations")
+    .select("id, project_id")
+    .eq("status", "queued")
+    .order("created_at", { ascending: true })
+    .limit(limit);
+
+  if (error) throw new Error(error.message);
+
+  return (data ?? []).map((generation) => ({
+    generationId: generation.id,
+    projectId: generation.project_id
+  }));
 }
 
 export async function getGenerationAssets(generationId: string) {
