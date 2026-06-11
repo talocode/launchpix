@@ -68,9 +68,10 @@ const routes = [
 ];
 
 const errorCodes = [
-  ["401", "Missing or invalid API key."],
-  ["400", "Missing user UUID, invalid payload, or no screenshots uploaded."],
-  ["404", "Project not found for the current owner."],
+  ["401", "Missing or invalid customer API key."],
+  ["400", "Invalid payload or no screenshots uploaded."],
+  ["402", "No credits remaining for this account."],
+  ["404", "Project not found for the API key owner."],
   ["429", "Too many generation attempts. Wait and retry."]
 ];
 
@@ -106,11 +107,11 @@ export default function ApiReferencePage() {
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
             <div className="rounded-[4px] border border-border/80 p-4">
               <p className="font-mono text-sm text-foreground">x-launchpix-api-key</p>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">Service key required for every API request.</p>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">Per-customer key (`lp_live_...` / `lp_test_...`) created in the API dashboard.</p>
             </div>
             <div className="rounded-[4px] border border-border/80 p-4">
-              <p className="font-mono text-sm text-foreground">x-launchpix-user-id</p>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">Owner UUID that scopes the request to the correct workspace.</p>
+              <p className="font-mono text-sm text-foreground">Authorization</p>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">Alternative bearer form: `Authorization: Bearer lp_live_...`</p>
             </div>
           </div>
         </section>

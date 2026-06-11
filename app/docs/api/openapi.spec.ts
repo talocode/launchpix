@@ -14,20 +14,16 @@ export const launchpixOpenApiSpec = {
   ],
   security: [
     {
-      LaunchPixApiKey: []
+      LaunchPixCustomerApiKey: []
     }
   ],
   components: {
     securitySchemes: {
-      LaunchPixApiKey: {
+      LaunchPixCustomerApiKey: {
         type: "apiKey",
         in: "header",
-        name: "x-launchpix-api-key"
-      },
-      LaunchPixUserId: {
-        type: "apiKey",
-        in: "header",
-        name: "x-launchpix-user-id"
+        name: "x-launchpix-api-key",
+        description: "Per-customer API key created in the LaunchPix API dashboard (lp_live_... or lp_test_...)."
       }
     },
     schemas: {
@@ -95,7 +91,7 @@ export const launchpixOpenApiSpec = {
     "/api/v1/projects": {
       get: {
         summary: "List API-visible projects for the current owner",
-        security: [{ LaunchPixApiKey: [], LaunchPixUserId: [] }],
+        security: [{ LaunchPixCustomerApiKey: [] }],
         responses: {
           "200": {
             description: "List of projects"
@@ -105,7 +101,7 @@ export const launchpixOpenApiSpec = {
       },
       post: {
         summary: "Create a new project workspace",
-        security: [{ LaunchPixApiKey: [], LaunchPixUserId: [] }],
+        security: [{ LaunchPixCustomerApiKey: [] }],
         requestBody: {
           required: true,
           content: {
@@ -131,7 +127,7 @@ export const launchpixOpenApiSpec = {
     "/api/v1/projects/{projectId}/uploads": {
       post: {
         summary: "Upload a screenshot as multipart form data",
-        security: [{ LaunchPixApiKey: [], LaunchPixUserId: [] }],
+        security: [{ LaunchPixCustomerApiKey: [] }],
         parameters: [
           {
             name: "projectId",
@@ -172,7 +168,7 @@ export const launchpixOpenApiSpec = {
     "/api/v1/projects/{projectId}/generate": {
       get: {
         summary: "Fetch the latest generation for a project",
-        security: [{ LaunchPixApiKey: [], LaunchPixUserId: [] }],
+        security: [{ LaunchPixCustomerApiKey: [] }],
         parameters: [
           {
             name: "projectId",
@@ -195,7 +191,7 @@ export const launchpixOpenApiSpec = {
       },
       post: {
         summary: "Start a generation run from uploaded screenshots",
-        security: [{ LaunchPixApiKey: [], LaunchPixUserId: [] }],
+        security: [{ LaunchPixCustomerApiKey: [] }],
         parameters: [
           {
             name: "projectId",
@@ -214,6 +210,8 @@ export const launchpixOpenApiSpec = {
             }
           },
           "400": { description: "At least one screenshot is required" },
+          "401": { description: "Missing or invalid customer API key" },
+          "402": { description: "No credits remaining" },
           "404": { description: "Project not found" },
           "429": { description: "Too many generation attempts" }
         }

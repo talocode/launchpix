@@ -1,24 +1,21 @@
 import { NextResponse } from "next/server";
-import { requireLaunchPixApiKey } from "@/lib/api-key";
-import { requireApiUserId } from "@/lib/api-user";
-import { getProjectOverview } from "@/lib/services/projects/queries";
+import { authenticateApiCustomerRequest } from "@/lib/services/api-keys/authenticate-api-key";
+import { getProjectOverviewForApi } from "@/lib/services/projects/api-queries";
 import { getGenerationAssets, getGenerationForProject } from "@/lib/services/generations/queries";
 import { mapGenerationToPublicStatus } from "@/lib/services/generations/status";
 import type { AssetRecord, GenerationRecord } from "@/types/project";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ projectId: string; generationId: string }> }
 ) {
-  const unauthorized = requireLaunchPixApiKey(_request);
-  if (unauthorized) return unauthorized;
-
-  const userResult = requireApiUserId(_request);
-  if ("response" in userResult) return userResult.response;
+  const authResult = await authenticateApiCustomerRequest(request);
+  if ("response" in authResult) return authResult.response;
 
   const { projectId, generationId } = await params;
 
-  await getProjectOverview(projectId, userResult.userId);
+  const overview = await getProjectOverviewForApi(projectId, authResult.customer.userId);
+  if (!overview) return NextResponse.json({ error: "Project not found." }, { status: 404 });
 
   const generation = (await getGenerationForProject(projectId, generationId)) as GenerationRecord | null;
   if (!generation) {

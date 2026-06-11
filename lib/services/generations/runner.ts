@@ -10,7 +10,15 @@ import { persistAssetsAndZip } from "@/lib/services/generations/storage";
 
 export { getUserBillingState } from "@/lib/services/generations/billing";
 
-export async function runGenerationForProject(project: ProjectRecord, uploads: UploadRecord[]): Promise<{ generationId: string }> {
+type RunGenerationOptions = {
+  apiKeyId?: string;
+};
+
+export async function runGenerationForProject(
+  project: ProjectRecord,
+  uploads: UploadRecord[],
+  options: RunGenerationOptions = {}
+): Promise<{ generationId: string }> {
   const generationStartedAt = Date.now();
   let creditConsumed = false;
 
@@ -24,7 +32,11 @@ export async function runGenerationForProject(project: ProjectRecord, uploads: U
   const { supabase, generation } = await createQueuedGeneration(project.id);
 
   try {
-    const { plan, subscription } = await consumeForGeneration(project.user_id);
+    const { plan, subscription } = await consumeForGeneration(project.user_id, {
+      generationId: generation.id,
+      projectId: project.id,
+      apiKeyId: options.apiKeyId
+    });
     creditConsumed = true;
 
     logGenerationEvent("info", "generation_credit_consumed", {

@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test lib/services/generations/*.test.ts",
+    "test": "tsx --test lib/services/**/*.test.ts",
     "worker:generations": "tsx scripts/process-generation-worker.ts",
     "video:studio": "remotion studio remotion/index.ts",
     "video:render": "remotion render remotion/index.ts LaunchPixDemo output/launchpix-demo.mp4",
