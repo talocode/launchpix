@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 
+/**
+ * Legacy platform key helper. Public /api/v1 routes authenticate per-customer API keys
+ * via lib/services/api-keys/authenticate-api-key.ts instead.
+ */
 const API_KEY_HEADER = "x-launchpix-api-key";
 
 export function hasValidLaunchPixApiKey(request: Request): boolean {

@@ -25,10 +25,8 @@ const requestExamples = [
     title: "Start generation",
     method: "POST",
     path: "/api/v1/projects/:projectId/generate",
-    body: `{
-  "x-launchpix-api-key": "lp_test_...",
-  "x-launchpix-user-id": "user_uuid"
-}`
+    body: `// Headers only — no JSON body required
+Authorization: Bearer lp_live_...`
   }
 ];
 
@@ -41,8 +39,7 @@ const res = await fetch(
   {
     method: "POST",
     headers: {
-      "x-launchpix-api-key": apiKey,
-      "x-launchpix-user-id": userId
+      Authorization: \`Bearer \${apiKey}\`
     },
     body: form
   }
@@ -55,8 +52,7 @@ const generateExample = `const res = await fetch(
   {
     method: "POST",
     headers: {
-      "x-launchpix-api-key": apiKey,
-      "x-launchpix-user-id": userId
+      Authorization: \`Bearer \${apiKey}\`
     }
   }
 );
@@ -65,13 +61,12 @@ if (res.status !== 202) throw new Error(await res.text());
 
 const { generationId, status, poll } = await res.json();`;
 
-const sdkExample = `export async function createProject(baseUrl, apiKey, userId, project) {
+const sdkExample = `export async function createProject(baseUrl, apiKey, project) {
   const res = await fetch(\`\${baseUrl}/api/v1/projects\`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-launchpix-api-key": apiKey,
-      "x-launchpix-user-id": userId
+      Authorization: \`Bearer \${apiKey}\`
     },
     body: JSON.stringify(project)
   });
@@ -80,7 +75,7 @@ const sdkExample = `export async function createProject(baseUrl, apiKey, userId,
   return res.json();
 }
 
-export async function uploadScreenshot(baseUrl, apiKey, userId, projectId, file, position = 0) {
+export async function uploadScreenshot(baseUrl, apiKey, projectId, file, position = 0) {
   const form = new FormData();
   form.append("file", file);
   form.append("position", String(position));
@@ -88,8 +83,7 @@ export async function uploadScreenshot(baseUrl, apiKey, userId, projectId, file,
   const res = await fetch(\`\${baseUrl}/api/v1/projects/\${projectId}/uploads\`, {
     method: "POST",
     headers: {
-      "x-launchpix-api-key": apiKey,
-      "x-launchpix-user-id": userId
+      Authorization: \`Bearer \${apiKey}\`
     },
     body: form
   });
@@ -98,12 +92,11 @@ export async function uploadScreenshot(baseUrl, apiKey, userId, projectId, file,
   return res.json();
 }
 
-export async function generatePack(baseUrl, apiKey, userId, projectId) {
+export async function generatePack(baseUrl, apiKey, projectId) {
   const res = await fetch(\`\${baseUrl}/api/v1/projects/\${projectId}/generate\`, {
     method: "POST",
     headers: {
-      "x-launchpix-api-key": apiKey,
-      "x-launchpix-user-id": userId
+      Authorization: \`Bearer \${apiKey}\`
     }
   });
 
@@ -111,12 +104,11 @@ export async function generatePack(baseUrl, apiKey, userId, projectId) {
   return res.json();
 }`;
 
-const pollExample = `export async function waitForGeneration(baseUrl, apiKey, userId, projectId) {
+const pollExample = `export async function waitForGeneration(baseUrl, apiKey, projectId) {
   for (;;) {
     const res = await fetch(\`\${baseUrl}/api/v1/projects/\${projectId}/generate\`, {
       headers: {
-        "x-launchpix-api-key": apiKey,
-        "x-launchpix-user-id": userId
+        Authorization: \`Bearer \${apiKey}\`
       }
     });
     const { generation } = await res.json();
@@ -150,7 +142,7 @@ const onboardingSteps = [
   {
     icon: PlayCircle,
     title: "Trigger generation",
-    text: "Call the generation endpoint with your API key and owner UUID to start the launch pack render."
+    text: "Call the generation endpoint with your customer API key. One credit is reserved per request."
   },
   {
     icon: CheckCircle2,
@@ -170,7 +162,7 @@ export default function ApiDocsPage() {
               <p className="eyebrow">API first</p>
               <h1 className="hero-title max-w-3xl">LaunchPix Developer API</h1>
               <p className="section-copy max-w-3xl">
-                LaunchPix is built for builders. Use `LAUNCHPIX_API_KEY` to create projects, trigger generation, and retrieve publish-ready launch packs from your own product workflow.
+                LaunchPix is built for builders. Create a customer API key in the API dashboard, then use it to create projects, trigger generation, and retrieve publish-ready launch packs from your own product workflow.
               </p>
 
               <div className="flex flex-wrap gap-3 pt-2">
@@ -205,7 +197,7 @@ export default function ApiDocsPage() {
 
               <div className="grid gap-3 pt-2 sm:grid-cols-3">
                 {[
-                  ["Auth", "API key + owner UUID"],
+                  ["Auth", "Customer API key"],
                   ["Rate model", "Credit-based usage"],
                   ["Result", "Launch-ready asset packs"]
                 ].map(([label, value]) => (
@@ -248,15 +240,15 @@ export default function ApiDocsPage() {
                   <p className="font-mono text-sm text-foreground">x-launchpix-api-key</p>
                   <Copy className="size-4 text-muted-foreground" />
                 </div>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">Your service key. The same value can also be sent as `Authorization: Bearer &lt;key&gt;`.</p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">Your per-customer key (`lp_live_...` or `lp_test_...`). The same value can also be sent as `Authorization: Bearer &lt;key&gt;`. Keys map to your account automatically — no separate user header.</p>
               </div>
 
               <div className="rounded-[4px] border border-border/80 p-4">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="font-mono text-sm text-foreground">x-launchpix-user-id</p>
+                  <p className="font-mono text-sm text-foreground">Billing</p>
                   <Copy className="size-4 text-muted-foreground" />
                 </div>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">The UUID of the workspace owner. This scopes all API actions to the correct account.</p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">Each `POST /generate` reserves one credit at request time. Failed runs refund when possible. Async workers never charge twice.</p>
               </div>
             </div>
 

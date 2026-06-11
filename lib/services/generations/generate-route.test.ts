@@ -4,6 +4,19 @@ import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 
 describe("v1 generate route generation modes", () => {
+  it("requires customer API key auth and scopes projects to the key owner", () => {
+    const source = readFileSync(
+      fileURLToPath(new URL("../../../app/api/v1/projects/[projectId]/generate/route.ts", import.meta.url)),
+      "utf8"
+    );
+
+    assert.equal(source.includes("authenticateApiCustomerRequest"), true);
+    assert.equal(source.includes("getProjectOverviewForApi"), true);
+    assert.equal(source.includes('status: 404'), true);
+    assert.equal(source.includes("requireLaunchPixApiKey"), false);
+    assert.equal(source.includes("requireApiUserId"), false);
+  });
+
   it("defaults to the sync runner until async generation is explicitly enabled", () => {
     const source = readFileSync(
       fileURLToPath(new URL("../../../app/api/v1/projects/[projectId]/generate/route.ts", import.meta.url)),

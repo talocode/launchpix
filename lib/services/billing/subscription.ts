@@ -54,7 +54,13 @@ export async function getOrCreateSubscription(userId: string) {
   }
 }
 
-export async function consumeGenerationCredit(userId: string) {
+export type GenerationCreditContext = {
+  generationId: string;
+  projectId: string;
+  apiKeyId?: string;
+};
+
+export async function consumeGenerationCredit(userId: string, context?: GenerationCreditContext) {
   const supabase = await createSupabaseServerClient();
   const current = await getOrCreateSubscription(userId);
   if (current.credits_remaining <= 0) throw new Error("No credits remaining. Buy credits to continue generating.");
@@ -68,6 +74,20 @@ export async function consumeGenerationCredit(userId: string) {
     .single();
 
   if (error || !data) throw new Error("Could not reserve credit. Please retry.");
+
+  if (context) {
+    await supabase.from("usage_events").insert({
+      user_id: userId,
+      project_id: context.projectId,
+      event_type: "generation_credit_consumed",
+      metadata_json: {
+        generationId: context.generationId,
+        apiKeyId: context.apiKeyId ?? null,
+        creditsRemaining: data.credits_remaining
+      }
+    });
+  }
+
   return data;
 }
 

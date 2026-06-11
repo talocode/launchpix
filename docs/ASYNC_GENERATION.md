@@ -1,5 +1,16 @@
 # Async generation operations
 
+## Auth layers (do not mix)
+
+| Layer | Credential | Used for |
+|-------|------------|----------|
+| **Customer API** | Per-user key (`lp_live_...`) via `x-launchpix-api-key` or Bearer | Public `/api/v1/*` routes — starts work and **charges credits** |
+| **Internal worker** | `LAUNCHPIX_WORKER_SECRET` via `x-launchpix-worker-secret` | `POST /api/internal/worker/generations/process` — processes queued jobs, **never charges** |
+
+Customer API keys must not be accepted on the internal worker route.
+
+---
+
 LaunchPix supports two API generation modes. **Sync is the production default.**
 
 ## Default: synchronous generation

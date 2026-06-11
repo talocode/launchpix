@@ -5,14 +5,25 @@ import { enqueueGenerationJob } from "@/lib/services/generations/enqueue";
 import { buildAcceptedGenerationResponse, type AcceptedGenerationResponse } from "@/lib/services/generations/enqueue-response";
 import { failGeneration, trackGenerationStarted } from "@/lib/services/generations/finalize";
 
-export async function submitGenerationRequest(project: ProjectRecord): Promise<AcceptedGenerationResponse> {
+type SubmitGenerationOptions = {
+  apiKeyId?: string;
+};
+
+export async function submitGenerationRequest(
+  project: ProjectRecord,
+  options: SubmitGenerationOptions = {}
+): Promise<AcceptedGenerationResponse> {
   const generationStartedAt = Date.now();
   let creditConsumed = false;
 
   const { supabase, generation } = await createPendingGeneration(project.id);
 
   try {
-    await consumeForGeneration(project.user_id);
+    await consumeForGeneration(project.user_id, {
+      generationId: generation.id,
+      projectId: project.id,
+      apiKeyId: options.apiKeyId
+    });
     creditConsumed = true;
 
     const queuedGeneration = await promoteGenerationToQueued(supabase, generation.id);
