@@ -2,7 +2,15 @@
 
 ## Customer API keys (public `/api/v1/*`)
 
-Create keys in the API dashboard (`/dashboard/api/keys`). Keys look like:
+### Create a key in the dashboard
+
+1. Sign in to LaunchPix.
+2. Open **API dashboard → API Keys** (`/dashboard/api/keys`).
+3. Click **Create key**, name it (e.g. `Production server`), and submit.
+4. Copy the full key immediately — it is shown **once** and cannot be viewed again.
+5. Revoke compromised keys from the same page.
+
+Keys look like:
 
 ```
 lp_live_<random>
@@ -59,8 +67,18 @@ x-launchpix-worker-secret: <LAUNCHPIX_WORKER_SECRET>
 
 `LAUNCHPIX_API_KEY` (legacy platform env var) is **not** used for public customer routes.
 
+## Example: trigger generation with a customer key
+
+```bash
+curl -X POST "https://launchpix-app.onrender.com/api/v1/projects/{projectId}/generate" \
+  -H "Authorization: Bearer lp_live_xxx" \
+  -H "Content-Type: application/json"
+```
+
+Sync mode returns **201** with `{ "generationId", "status": "completed" }`. Async mode (when enabled) returns **202** with a poll URL.
+
 ## Local development
 
 1. Apply migration `0007_customer_api_keys.sql`
-2. Create a key with server-side helper `createCustomerApiKey({ userId })` (dashboard UI coming soon)
+2. Create a key from `/dashboard/api/keys` or with `createCustomerApiKey({ userId })`
 3. Call public routes with the returned token once
