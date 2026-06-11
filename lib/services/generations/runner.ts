@@ -1,137 +1,107 @@
-import JSZip from "jszip";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { mistralAdapter } from "@/lib/ai/generate-asset-plan";
-import { createDeterministicGenerationPlan } from "@/lib/ai/mistral";
-import { generationPlanSchema } from "@/lib/ai/schemas/asset-plan";
-import { buildDeterministicAssets, renderAssetPng } from "@/lib/render/pipeline";
 import type { ProjectRecord, UploadRecord } from "@/types/project";
-import { consumeGenerationCredit, getOrCreateSubscription } from "@/lib/services/billing/subscription";
-import { PLAN_CONFIG } from "@/lib/services/billing/plans";
-import { trackEvent } from "@/lib/services/analytics/events";
+import { consumeForGeneration, getUserBillingState, refundForGeneration } from "@/lib/services/generations/billing";
+import { createQueuedGeneration } from "@/lib/services/generations/create-generation";
+import { failGeneration, finalizeGeneration, trackGenerationStarted } from "@/lib/services/generations/finalize";
+import { logGenerationError, logGenerationEvent } from "@/lib/services/generations/logging";
+import { markGenerationAnalyzing, planAssets } from "@/lib/services/generations/planner";
+import { renderAssets } from "@/lib/services/generations/renderer";
+import { persistAssetsAndZip } from "@/lib/services/generations/storage";
 
-const ASSET_BUCKET = process.env.STORAGE_BUCKET_ASSETS || "launchpix-assets";
+export { getUserBillingState } from "@/lib/services/generations/billing";
 
-export async function runGenerationForProject(project: ProjectRecord, uploads: UploadRecord[]) {
-  const supabase = await createSupabaseServerClient();
-  const subscription = await consumeGenerationCredit(project.user_id);
-  const plan = PLAN_CONFIG[(subscription.plan as keyof typeof PLAN_CONFIG) || "credits"] || PLAN_CONFIG.credits;
+type RunGenerationOptions = {
+  apiKeyId?: string;
+};
 
-  const { data: generation, error: generationError } = await supabase
-    .from("generations")
-    .insert({ project_id: project.id, status: "queued" })
-    .select("*")
-    .single();
+export async function runGenerationForProject(
+  project: ProjectRecord,
+  uploads: UploadRecord[],
+  options: RunGenerationOptions = {}
+): Promise<{ generationId: string }> {
+  const generationStartedAt = Date.now();
+  let creditConsumed = false;
 
-  if (generationError || !generation) throw new Error(generationError?.message || "Failed to create generation record");
-  await trackEvent({ userId: project.user_id, projectId: project.id, eventType: "generation_started", metadata: { generationId: generation.id, projectName: project.name } });
+  logGenerationEvent("info", "generation_pipeline_started", {
+    projectId: project.id,
+    projectName: project.name,
+    userId: project.user_id,
+    uploadCount: uploads.length
+  });
+
+  const { supabase, generation } = await createQueuedGeneration(project.id);
 
   try {
-    await supabase.from("generations").update({ status: "analyzing" }).eq("id", generation.id);
+    const { plan, subscription } = await consumeForGeneration(project.user_id, {
+      generationId: generation.id,
+      projectId: project.id,
+      apiKeyId: options.apiKeyId
+    });
+    creditConsumed = true;
 
-    const planningInput = {
-      project: {
-        name: project.name,
-        product_type: project.product_type,
-        platform: project.platform,
-        description: project.description,
-        audience: project.audience,
-        style_preset: project.style_preset,
-        style_prompt: project.style_prompt
-      },
-      uploads: uploads.map((u) => ({ id: u.id, file_url: u.file_url, position: u.position }))
-    };
-
-    const planResponse = await mistralAdapter.generateAssetPlan(planningInput).catch((error) => {
-      const message = error instanceof Error ? error.message : String(error);
-      console.error("AI planning failed; continuing with deterministic plan:", message);
-      return createDeterministicGenerationPlan(planningInput);
+    logGenerationEvent("info", "generation_credit_consumed", {
+      projectId: project.id,
+      generationId: generation.id,
+      userId: project.user_id,
+      plan: plan.id,
+      creditsRemaining: subscription.credits_remaining
     });
 
-    const safePlan = generationPlanSchema.parse(planResponse);
+    await trackGenerationStarted(project, generation.id);
+    await markGenerationAnalyzing(supabase, generation.id);
 
-    await supabase
-      .from("generations")
-      .update({ status: "generating_copy", ai_summary: safePlan, copy_json: safePlan, style_json: safePlan })
-      .eq("id", generation.id);
+    const safePlan = await planAssets(supabase, project, uploads, generation.id);
+    const { deterministicAssets, renderedAssets, renderSources, qualityFailures, qualityWarnings } = await renderAssets(project, safePlan, uploads);
+    const { zipUrl } = await persistAssetsAndZip({
+      supabase,
+      project,
+      generationId: generation.id,
+      plan,
+      safePlan,
+      renderedAssets,
+      qualityFailures
+    });
 
-    await supabase.from("generations").update({ status: "rendering_assets" }).eq("id", generation.id);
+    await finalizeGeneration({
+      supabase,
+      project,
+      generationId: generation.id,
+      safePlan,
+      zipUrl,
+      renderSources,
+      qualityWarnings,
+      generationStartedAt,
+      assetCount: deterministicAssets.length
+    });
 
-    const deterministicAssets = buildDeterministicAssets(safePlan, uploads);
-    const zip = new JSZip();
-
-    for (const [index, asset] of deterministicAssets.entries()) {
-      const fullPng = await renderAssetPng({
-        width: asset.width,
-        height: asset.height,
-        templateFamily: asset.template_family,
-        headline: asset.headline,
-        subheadline: asset.subheadline,
-        callouts: asset.callouts,
-        cta: safePlan.cta_line,
-        screenshotUrls: asset.screenshotUrls,
-        primaryColor: project.primary_color
-      });
-
-      const previewPng = await renderAssetPng({
-        width: asset.width,
-        height: asset.height,
-        templateFamily: asset.template_family,
-        headline: asset.headline,
-        subheadline: asset.subheadline,
-        callouts: asset.callouts,
-        cta: safePlan.cta_line,
-        screenshotUrls: asset.screenshotUrls,
-        primaryColor: project.primary_color,
-        watermarkText: "LaunchPix Preview"
-      });
-
-      const filename = `${String(index + 1).padStart(2, "0")}-${asset.asset_type}.png`;
-      const fullPath = `${project.user_id}/${project.id}/${generation.id}/full/${filename}`;
-      const previewPath = `${project.user_id}/${project.id}/${generation.id}/preview/${filename}`;
-
-      const { error: fullError } = await supabase.storage.from(ASSET_BUCKET).upload(fullPath, fullPng, { contentType: "image/png", upsert: true });
-      if (fullError) throw new Error(fullError.message);
-      const { error: previewError } = await supabase.storage.from(ASSET_BUCKET).upload(previewPath, previewPng, { contentType: "image/png", upsert: true });
-      if (previewError) throw new Error(previewError.message);
-
-      const { data: fullUrl } = supabase.storage.from(ASSET_BUCKET).getPublicUrl(fullPath);
-      const { data: previewUrl } = supabase.storage.from(ASSET_BUCKET).getPublicUrl(previewPath);
-
-      await supabase.from("assets").insert({
-        generation_id: generation.id,
-        asset_type: asset.asset_type,
-        width: asset.width,
-        height: asset.height,
-        file_url: fullUrl.publicUrl,
-        preview_url: previewUrl.publicUrl,
-        metadata_json: {
-          template_family: asset.template_family,
-          notes: asset.notes,
-          callouts: asset.callouts,
-          screenshot_ids: asset.screenshot_ids,
-          watermark_required: plan.watermarkPreview
-        }
-      });
-
-      zip.file(filename, fullPng);
-    }
-
-    const zipBuffer = await zip.generateAsync({ type: "uint8array" });
-    const zipPath = `${project.user_id}/${project.id}/${generation.id}/launchpix-pack.zip`;
-    await supabase.storage.from(ASSET_BUCKET).upload(zipPath, zipBuffer, { contentType: "application/zip", upsert: true });
-    const { data: zipUrl } = supabase.storage.from(ASSET_BUCKET).getPublicUrl(zipPath);
-
-    await supabase.from("generations").update({ status: "completed", style_json: { ...safePlan, zip_url: zipUrl.publicUrl } }).eq("id", generation.id);
-    await supabase.from("projects").update({ status: "completed" }).eq("id", project.id);
-    await trackEvent({ userId: project.user_id, projectId: project.id, eventType: "generation_completed", metadata: { generationId: generation.id, projectName: project.name } });
+    logGenerationEvent("info", "generation_pipeline_completed", {
+      projectId: project.id,
+      generationId: generation.id,
+      assetCount: deterministicAssets.length,
+      renderSources,
+      qualityWarningCount: qualityWarnings.length,
+      durationMs: Date.now() - generationStartedAt
+    });
 
     return { generationId: generation.id };
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Generation failed";
-    await supabase.from("generations").update({ status: "failed", error_message: message }).eq("id", generation.id);
-    await supabase.from("projects").update({ status: "failed" }).eq("id", project.id);
-    await trackEvent({ userId: project.user_id, projectId: project.id, eventType: "generation_failed", metadata: { generationId: generation.id, projectName: project.name, message } });
-    throw error;
+    logGenerationError("generation_pipeline_failed", error, {
+      projectId: project.id,
+      generationId: generation.id,
+      userId: project.user_id,
+      creditConsumed,
+      durationMs: Date.now() - generationStartedAt
+    });
+
+    return failGeneration({
+      supabase,
+      project,
+      generationId: generation.id,
+      error,
+      creditConsumed,
+      generationStartedAt,
+      refundCredit: (reason) => refundForGeneration(project.user_id, reason, generation.id)
+    });
   }
 }
 
@@ -140,8 +110,4 @@ export async function rerenderSingleAsset(assetId: string) {
   const { data: asset, error } = await supabase.from("assets").select("*").eq("id", assetId).single();
   if (error || !asset) throw new Error("Asset not found");
   return asset;
-}
-
-export async function getUserBillingState(userId: string) {
-  return getOrCreateSubscription(userId);
 }

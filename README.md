@@ -1,122 +1,74 @@
-# LaunchPix
+# Talocode LaunchPix
 
-LaunchPix is a Mistral-assisted, deterministic asset generator for product launches.
-It turns raw screenshots into polished listing visuals, promo tiles, and hero banners.
+Talocode LaunchPix is an API-first, open-source launch visual engine.
+It turns product screenshots into listing frames, promo tiles, and hero banners with deterministic fallback rendering.
 
-## Design system
-- `DESIGN.md` is the canonical design brain for the product UI.
-- `docs/design-md/google-designmd-spec.md` is a local copy of the Google DESIGN.md specification.
-- `docs/design-md/README.md` explains how to use both files in this repo.
+## Repository
+- Canonical repo: `https://github.com/talocode/launchpix`
 
-## Tech stack
+## Product direction
+- API first: developer endpoints live under `/api/v1/*`.
+- Open source core: code is public, but API usage requires `LAUNCHPIX_API_KEY`.
+- Credits model: users start with free credits, then buy one-time credit packs.
+
+## Core stack
 - Next.js App Router + TypeScript
-- Tailwind CSS + reusable UI primitives
-- Supabase (Auth, Postgres, Storage)
-- Mistral (structured planning only)
-- Deterministic SVG -> PNG rendering (`@resvg/resvg-js`)
-- Lemon Squeezy credit-pack billing and webhook fulfillment
+- Supabase (Postgres, Storage)
+- Mistral (planning + image generation)
+- Lemon Squeezy (credit-pack checkout + webhook fulfillment)
+- Resend (transactional email)
 
-## Core product flow
-1. Sign in
-2. Create project and upload screenshots
-3. Generate structured asset plan via Mistral
-4. Render deterministic asset pack (5 listing + promo + hero)
-5. Preview/download assets while credits remain
+## API authentication
+Every `/api/v1/*` request must include:
+- `x-launchpix-api-key: <LAUNCHPIX_API_KEY>`
+- `x-launchpix-user-id: <owner-user-uuid>`
 
-## Pricing model implemented
-- Every account starts with 300 credits.
-- Existing accounts are raised to at least 300 credits by `0004_credit_balance_model.sql`.
-- Billing is credit based, not subscription based.
-- Users buy one-time Lemon Squeezy credit packs after exhausting their included credits.
+Supported alternatives:
+- `x-api-key`
+- `Authorization: Bearer <LAUNCHPIX_API_KEY>`
 
-## Required environment variables
+## Developer API endpoints
+- `GET /api/v1/projects`
+- `POST /api/v1/projects`
+- `GET /api/v1/projects/:projectId/generate`
+- `POST /api/v1/projects/:projectId/generate`
+
+## Environment variables
 See `.env.example`.
-Minimum required:
+
+Critical keys:
 - `NEXT_PUBLIC_APP_URL`
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `DATABASE_URL`
+- `NEXTAUTH_SECRET`
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
 - `MISTRAL_API_KEY`
-- `MISTRAL_MODEL_VISION`
 - `MISTRAL_MODEL_TEXT`
-- `LEMON_SQUEEZY_API_KEY`
-- `LEMON_SQUEEZY_STORE_ID`
-- `LEMON_SQUEEZY_WEBHOOK_SECRET`
-- `LEMON_SQUEEZY_STARTER_CREDITS_VARIANT_ID`
-- `LEMON_SQUEEZY_CREATOR_CREDITS_VARIANT_ID`
-- `LEMON_SQUEEZY_STUDIO_CREDITS_VARIANT_ID`
-
-Optional for Supabase CLI workflows:
-- `SUPABASE_ACCESS_TOKEN`
-- `SUPABASE_DB_PASSWORD`
+- `MISTRAL_MODEL_VISION`
+- `MISTRAL_IMAGE_MODEL`
+- `MISTRAL_IMAGE_AGENT_ID` (optional)
+- `LAUNCHPIX_API_KEY`
+- `LEMON_SQUEEZY_*`
+- `RESEND_API_KEY`
 
 ## Local setup
-1. Copy env:
-   - `cp .env.example .env.local`
-2. Install dependencies:
-   - `npm install`
-4. Apply database migrations using one of these options:
-   - Supabase CLI: `npx supabase db push --linked`
-   - or run the SQL files in `supabase/migrations/` in order
-5. Start dev server:
-   - `npm run dev`
+1. Copy env file: `cp .env.example .env.local`
+2. Install: `npm install`
+3. Apply DB migrations: `npx supabase db push --linked`
+4. Start app: `npm run dev`
 
-Recommended validation commands:
+Validation:
 - `npm run typecheck`
 - `npm run build`
 
-## Supabase notes
-- Enable email auth.
-- Ensure storage buckets exist:
-  - `project-uploads-raw`
-  - `project-uploads-normalized`
-  - `launchpix-assets`
-- Apply RLS policies from migrations.
-- If you use the Supabase CLI, link the project first with `npx supabase link`.
+## Render deployment
+- Render config is in [`render.yaml`](/C:/Users/Hp/Documents/Github/LaunchPix/render.yaml).
+- Build command: `npm ci && npm run build`
+- Start command: `npm run start`
+- Set all required env vars in Render dashboard.
 
-## Mistral notes
-- Mistral is used for structured product/copy/layout planning.
-- Rendering remains deterministic and template-driven.
-- Default model: `mistral-small-2506` (configurable via env).
-- The app currently uses the text model for schema-constrained planning and does not rely on image-vision inputs during generation.
-
-## Lemon Squeezy notes
-- Checkout init: `POST /api/billing/checkout`
-- Verification: purchases are fulfilled by webhook after Lemon Squeezy confirms the order
-- Webhook: `POST /api/billing/webhook`
-- Configure Lemon Squeezy webhook URL to point to `/api/billing/webhook`.
-- Select the `order_created` event for credit fulfillment.
-- Create three Lemon Squeezy variants and map them to the variant ID env vars in `.env.example`.
-
-## Commands
-- `npm run dev`
-- `npm run lint`
-- `npm run typecheck`
-- `npm run build`
-- `npm run video:studio`
-- `npm run video:render`
-- `npm run video:render:chrome` on Windows if Remotion cannot download Chrome Headless Shell
-
-## Demo video
-- The Remotion demo composition lives in `remotion/`.
-- Rendered output is written to `output/launchpix-demo.mp4`.
-- The video explains the core LaunchPix story: project brief, screenshot uploads, Mistral planning, deterministic rendering, exports, credits, and billing.
-
-## Deployment notes
-- Set all env vars in hosting provider.
-- `NEXT_PUBLIC_APP_URL` must be set in the hosting provider's production environment to your live domain; `.env.local` is only used locally.
-- Use HTTPS and production callback URLs for Lemon Squeezy.
-- Auth confirmation and billing redirects are built from `NEXT_PUBLIC_APP_URL`, so production must not point this to localhost.
-- Keep `package-lock.json` committed so CI and hosting builds install the same dependency tree.
-- Confirm webhook signature secret matches deployment env.
-
-## Netlify notes
-- Build command: `npm run build`
-- Install command: `npm install` or `npm ci`
-- The app relies on `@resvg/resvg-js` during server rendering, so the current `next.config.ts` must be preserved in deployments.
-
-## Known MVP constraints
-- Rate limiting is lightweight (in-memory).
-- Credit packs are one-time purchases; subscription renewal automation is intentionally not used.
-- Visual templates are production-capable baseline and can be expanded further.
+## Legacy note
+Previous Netlify-specific deployment notes were removed in favor of Render as the primary target.

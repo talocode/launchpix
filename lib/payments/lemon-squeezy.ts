@@ -15,6 +15,12 @@ function getVariantId(packId: CreditPackId) {
   return requiredEnv(pack.variantEnvKey);
 }
 
+function requireNumericEnv(name: string) {
+  const value = requiredEnv(name).trim();
+  if (!/^\d+$/.test(value)) throw new Error(`${name} must be a numeric Lemon Squeezy ID`);
+  return value;
+}
+
 async function lemonSqueezyRequest(path: string, init: RequestInit) {
   const apiKey = requiredEnv("LEMON_SQUEEZY_API_KEY");
 
@@ -29,7 +35,18 @@ async function lemonSqueezyRequest(path: string, init: RequestInit) {
   });
 
   const json = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(json?.errors?.[0]?.detail || json?.message || "Lemon Squeezy request failed");
+  if (!res.ok) {
+    const errors = Array.isArray(json?.errors) ? json.errors : [];
+    const details = errors
+      .map((error: { detail?: string; source?: { pointer?: string }; title?: string }) => {
+        const location = error.source?.pointer ? ` at ${error.source.pointer}` : "";
+        return `${error.detail || error.title || "Unknown Lemon Squeezy error"}${location}`;
+      })
+      .filter(Boolean)
+      .join("; ");
+
+    throw new Error(details || json?.message || "Lemon Squeezy request failed");
+  }
   return json;
 }
 
@@ -41,6 +58,8 @@ export async function createCreditCheckout(input: {
 }) {
   const pack = getCreditPack(input.packId);
   if (!pack) throw new Error("Unknown credit pack");
+  const storeId = requireNumericEnv("LEMON_SQUEEZY_STORE_ID");
+  const variantId = requireNumericEnv(pack.variantEnvKey);
 
   const json = await lemonSqueezyRequest("/checkouts", {
     method: "POST",
@@ -50,11 +69,11 @@ export async function createCreditCheckout(input: {
         attributes: {
           product_options: {
             name: pack.label,
-            description: `${pack.creditsGranted} LaunchPix credits`,
+            description: `${pack.creditsGranted} Talocode LaunchPix credits`,
             redirect_url: input.callbackUrl,
-            receipt_button_text: "Return to LaunchPix",
+            receipt_button_text: "Return to Talocode LaunchPix",
             receipt_link_url: input.callbackUrl,
-            enabled_variants: [Number(getVariantId(input.packId))]
+            enabled_variants: [Number(variantId)]
           },
           checkout_options: {
             embed: false,
@@ -82,13 +101,13 @@ export async function createCreditCheckout(input: {
           store: {
             data: {
               type: "stores",
-              id: requiredEnv("LEMON_SQUEEZY_STORE_ID")
+              id: storeId
             }
           },
           variant: {
             data: {
               type: "variants",
-              id: getVariantId(input.packId)
+              id: variantId
             }
           }
         }
@@ -99,6 +118,22 @@ export async function createCreditCheckout(input: {
   const url = json?.data?.attributes?.url;
   if (!url) throw new Error("Lemon Squeezy did not return a checkout URL");
   return { checkoutUrl: url };
+}
+
+export async function validateCreditCheckoutConfig(packId: CreditPackId) {
+  const pack = getCreditPack(packId);
+  if (!pack) throw new Error("Unknown credit pack");
+
+  const storeId = requireNumericEnv("LEMON_SQUEEZY_STORE_ID");
+  const variantId = requireNumericEnv(pack.variantEnvKey);
+  const json = await lemonSqueezyRequest(`/variants/${variantId}`, { method: "GET" });
+  const variantStoreId = String(json?.data?.relationships?.store?.data?.id || "");
+
+  if (variantStoreId && variantStoreId !== storeId) {
+    throw new Error(`${pack.variantEnvKey} belongs to Lemon Squeezy store ${variantStoreId}, but LEMON_SQUEEZY_STORE_ID is ${storeId}`);
+  }
+
+  return { storeId, variantId };
 }
 
 export function verifyLemonSqueezyWebhookSignature(body: string, signature: string | null) {
