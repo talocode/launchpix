@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import { MarketingPageShell } from "@/components/marketing/page-shell";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -119,10 +120,10 @@ export default function ApiExamplesPage() {
             </div>
             <div className="flex flex-wrap gap-3">
               <Button asChild variant="outline">
-                <Link href="/docs/api/openapi.json">Open JSON spec</Link>
+                <Link href={"/docs/api/openapi.json" as Route}>Open JSON spec</Link>
               </Button>
               <Button asChild variant="outline">
-                <Link href="/docs/api/openapi.yaml">Open YAML spec</Link>
+                <Link href={"/docs/api/openapi.yaml" as Route}>Open YAML spec</Link>
               </Button>
             </div>
           </div>

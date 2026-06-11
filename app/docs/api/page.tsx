@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, Copy, FolderPlus, PlayCircle, UploadCloud } from "lucide-react";
 import { TopNav } from "@/components/marketing/top-nav";
@@ -60,7 +61,9 @@ const generateExample = `const res = await fetch(
   }
 );
 
-const { generationId } = await res.json();`;
+if (res.status !== 202) throw new Error(await res.text());
+
+const { generationId, status, poll } = await res.json();`;
 
 const sdkExample = `export async function createProject(baseUrl, apiKey, userId, project) {
   const res = await fetch(\`\${baseUrl}/api/v1/projects\`, {
@@ -172,6 +175,12 @@ export default function ApiDocsPage() {
 
               <div className="flex flex-wrap gap-3 pt-2">
                 <Button asChild>
+                  <Link href="/dashboard/api">
+                    Open API dashboard
+                    <ArrowRight className="size-4" />
+                  </Link>
+                </Button>
+                <Button asChild variant="outline">
                   <Link href="/contact">
                     Request access
                     <ArrowRight className="size-4" />
@@ -181,16 +190,16 @@ export default function ApiDocsPage() {
                   <Link href="/pricing">View usage credits</Link>
                 </Button>
                 <Button asChild variant="outline">
-                  <Link href="/docs/api/reference">Open reference</Link>
+                  <Link href={"/docs/api/reference" as Route}>Open reference</Link>
                 </Button>
                 <Button asChild variant="outline">
-                  <Link href="/docs/api/examples">Open examples</Link>
+                  <Link href={"/docs/api/examples" as Route}>Open examples</Link>
                 </Button>
                 <Button asChild variant="outline">
-                  <Link href="/docs/api/openapi.json">Open JSON spec</Link>
+                  <Link href={"/docs/api/openapi.json" as Route}>Open JSON spec</Link>
                 </Button>
                 <Button asChild variant="outline">
-                  <Link href="/docs/api/openapi.yaml">Open YAML spec</Link>
+                  <Link href={"/docs/api/openapi.yaml" as Route}>Open YAML spec</Link>
                 </Button>
               </div>
 

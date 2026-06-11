@@ -129,4 +129,12 @@ body {
   .dashboard-label {
     @apply text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground;
   }
+
+  .api-dashboard {
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  .api-dashboard-card {
+    @apply shadow-none;
+  }
 }
