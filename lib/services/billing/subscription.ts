@@ -76,7 +76,7 @@ export async function consumeGenerationCredit(userId: string, context?: Generati
   if (error || !data) throw new Error("Could not reserve credit. Please retry.");
 
   if (context) {
-    await supabase.from("usage_events").insert({
+    const { error: ledgerError } = await supabase.from("usage_events").insert({
       user_id: userId,
       project_id: context.projectId,
       event_type: "generation_credit_consumed",
@@ -86,6 +86,20 @@ export async function consumeGenerationCredit(userId: string, context?: Generati
         creditsRemaining: data.credits_remaining
       }
     });
+
+    if (ledgerError) {
+      const { error: rollbackError } = await supabase
+        .from("subscriptions")
+        .update({ credits_remaining: data.credits_remaining + 1 })
+        .eq("id", data.id)
+        .eq("credits_remaining", data.credits_remaining);
+
+      if (rollbackError) {
+        throw new Error("Could not record credit usage and rollback failed. Please contact support.");
+      }
+
+      throw new Error("Could not record credit usage. Please retry.");
+    }
   }
 
   return data;

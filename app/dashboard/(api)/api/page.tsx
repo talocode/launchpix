@@ -5,12 +5,15 @@ import { GetStartedCard } from "@/components/api-dashboard/get-started-card";
 import { MetricCard } from "@/components/api-dashboard/metric-card";
 import { MOCK_METRICS } from "@/lib/api-dashboard/mock-data";
 import { getDisplayName, getTimeGreeting } from "@/lib/api-dashboard/greeting";
+import { listCustomerApiKeys } from "@/lib/services/api-keys/list-api-keys";
 import { requireUser } from "@/lib/supabase/auth";
 import { getAccessContext } from "@/lib/services/access/permissions";
 
 export default async function ApiPlatformHomePage() {
   const { user } = await requireUser();
   const { subscription } = await getAccessContext(user.id);
+  const keys = await listCustomerApiKeys(user.id).catch(() => []);
+  const activeApiKeys = keys.filter((key) => key.status === "active").length;
   const greeting = getTimeGreeting();
   const name = getDisplayName(user.name, user.email);
   const creditsDisplay =
@@ -36,8 +39,8 @@ export default async function ApiPlatformHomePage() {
         <MetricCard label="Total issued" value={MOCK_METRICS.totalIssuedUsd} />
         <MetricCard
           label="Active API keys"
-          value={String(MOCK_METRICS.activeApiKeys)}
-          hint={MOCK_METRICS.activeApiKeys === 0 ? "0 active keys" : undefined}
+          value={String(activeApiKeys)}
+          hint={activeApiKeys === 0 ? "0 active keys" : undefined}
         />
       </section>
 

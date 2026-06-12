@@ -46,6 +46,14 @@ describe("generation billing boundaries", () => {
     assert.equal(billingSource.includes("apiKeyId: context.apiKeyId"), true);
   });
 
+  it("rolls back reserved credits when usage_events insert fails", () => {
+    const billingSource = readFileSync(fileURLToPath(new URL("../billing/subscription.ts", import.meta.url)), "utf8");
+
+    assert.equal(billingSource.includes("error: ledgerError"), true);
+    assert.equal(billingSource.includes("credits_remaining: data.credits_remaining + 1"), true);
+    assert.equal(billingSource.includes("Could not record credit usage. Please retry."), true);
+  });
+
   it("refunds failed generations with generationId metadata", () => {
     const billingSource = readFileSync(fileURLToPath(new URL("../billing/subscription.ts", import.meta.url)), "utf8");
 
